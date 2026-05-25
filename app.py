@@ -9,7 +9,7 @@ from forms import RegisterForm, LoginForm, PromptForm, CATEGORIES
 
 # ── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "promptvault-super-secret-key-2024"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-dev-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///prompts.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
