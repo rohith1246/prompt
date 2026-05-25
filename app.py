@@ -396,9 +396,12 @@ def toggle_favorite(prompt_id):
         return jsonify({"status": "added"})
 
 
+# ── Initialize DB before first request ───────────────────────────────────────
+@app.before_first_request
+def initialize_database():
+    db.create_all()
+    seed_database()
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        seed_database()
     app.run(debug=True)
