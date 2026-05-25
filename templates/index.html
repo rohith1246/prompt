@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}PromptVault — Explore AI Prompts{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">✨ The AI Prompt Library</div>
+  <h1 class="hero-title">
+    Supercharge Your<br/>
+    <span class="gradient-text">AI Workflow</span>
+  </h1>
+  <p class="hero-sub">Discover, share, and collect the best prompts for ChatGPT, Claude, and more. Built by the community, for the community.</p>
+  <div class="hero-actions">
+    <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}" class="btn-primary">
+      Share a Prompt →
+    </a>
+    <a href="#prompts" class="btn-ghost">Browse Library</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><strong>{{ prompts|length }}</strong><span>Prompts</span></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><strong>{{ categories|length }}</strong><span>Categories</span></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><strong>Free</strong><span>Forever</span></div>
+  </div>
+</section>
+
+<!-- Category Filter -->
+<section class="categories-bar" id="prompts">
+  <div class="container">
+    <div class="cat-pills">
+      <a href="{{ url_for('index') }}" class="cat-pill {% if not active_category %}active{% endif %}">
+        All
+      </a>
+      {% for cat in categories %}
+        <a href="{{ url_for('index', category=cat, search=search) }}" class="cat-pill {% if active_category == cat %}active{% endif %}">
+          {{ cat }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Prompts Grid -->
+<section class="prompts-section container">
+  {% if search %}
+    <p class="search-results-label">
+      {% if prompts %}
+        {{ prompts|length }} result{{ 's' if prompts|length != 1 }} for "<strong>{{ search }}</strong>"
+      {% else %}
+        No results for "<strong>{{ search }}</strong>"
+      {% endif %}
+    </p>
+  {% endif %}
+
+  {% if prompts %}
+    <div class="prompts-grid">
+      {% for prompt in prompts %}
+        <div class="prompt-card" data-id="{{ prompt.id }}">
+          <div class="card-header">
+            <span class="card-cat cat-{{ prompt.category|lower }}">{{ prompt.category }}</span>
+            <div class="card-actions-top">
+              <button
+                class="btn-fav {% if prompt.id in user_favorites %}active{% endif %}"
+                onclick="toggleFavorite({{ prompt.id }}, this)"
+                title="Save to favorites"
+                {% if not current_user.is_authenticated %}onclick="window.location='/login'"{% endif %}
+              >
+                {% if prompt.id in user_favorites %}♥{% else %}♡{% endif %}
+              </button>
+            </div>
+          </div>
+
+          <a href="{{ url_for('prompt_detail', prompt_id=prompt.id) }}" class="card-title-link">
+            <h3 class="card-title">{{ prompt.title }}</h3>
+          </a>
+
+          <p class="card-preview">{{ prompt.content[:140] }}{% if prompt.content|length > 140 %}…{% endif %}</p>
+
+          <div class="card-footer">
+            <div class="card-meta">
+              <span class="card-author">by {{ prompt.author.username }}</span>
+              <span class="card-date">{{ prompt.created_at.strftime('%b %d') }}</span>
+            </div>
+            <div class="card-btns">
+              <button class="btn-like" onclick="likePrompt({{ prompt.id }}, this)" title="Like">
+                <span class="like-icon">▲</span>
+                <span class="like-count">{{ prompt.likes }}</span>
+              </button>
+              <button class="btn-copy" onclick="copyPrompt({{ prompt.id }}, `{{ prompt.content | replace('`', '\\`') | replace('\n', '\\n') }}`, this)" title="Copy prompt">
+                📋 Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No prompts found</h3>
+      <p>{% if search %}Try a different search term.{% else %}Be the first to add a prompt!{% endif %}</p>
+      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}" class="btn-primary">Add a Prompt</a>
+    </div>
+  {% endif %}
+</section>
+
+{% endblock %}

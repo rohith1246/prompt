@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PromptVault{% endblock %}
+
+{% block content %}
+<div class="container dashboard-page">
+  <!-- Dashboard Header -->
+  <div class="dash-header">
+    <div class="dash-avatar">{{ current_user.username[0].upper() }}</div>
+    <div class="dash-info">
+      <h1>{{ current_user.username }}</h1>
+      <p class="dash-email">{{ current_user.email }}</p>
+      <p class="dash-joined">Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+    </div>
+    <a href="{{ url_for('create_prompt') }}" class="btn-primary">+ New Prompt</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="dash-stats">
+    <div class="stat-card">
+      <span class="stat-num">{{ prompts|length }}</span>
+      <span class="stat-label">Prompts Created</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ total_likes }}</span>
+      <span class="stat-label">Total Likes</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">{{ fav_count }}</span>
+      <span class="stat-label">Saved Favorites</span>
+    </div>
+  </div>
+
+  <!-- My Prompts -->
+  <div class="dash-section">
+    <div class="dash-section-header">
+      <h2>My Prompts</h2>
+      <a href="{{ url_for('favorites') }}" class="link-subtle">View Favorites →</a>
+    </div>
+
+    {% if prompts %}
+      <div class="dash-prompts-list">
+        {% for prompt in prompts %}
+          <div class="dash-prompt-row">
+            <div class="dash-prompt-info">
+              <span class="card-cat cat-{{ prompt.category|lower }}">{{ prompt.category }}</span>
+              <a href="{{ url_for('prompt_detail', prompt_id=prompt.id) }}" class="dash-prompt-title">{{ prompt.title }}</a>
+              <span class="dash-prompt-meta">{{ prompt.created_at.strftime('%b %d, %Y') }} · {{ prompt.likes }} likes</span>
+            </div>
+            <div class="dash-prompt-actions">
+              <a href="{{ url_for('edit_prompt', prompt_id=prompt.id) }}" class="btn-ghost btn-sm">Edit</a>
+              <form method="POST" action="{{ url_for('delete_prompt', prompt_id=prompt.id) }}" style="display:inline" onsubmit="return confirm('Delete this prompt?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-danger btn-sm">Delete</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">✍️</div>
+        <h3>No prompts yet</h3>
+        <p>Share your first AI prompt with the community!</p>
+        <a href="{{ url_for('create_prompt') }}" class="btn-primary">Create Prompt</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
