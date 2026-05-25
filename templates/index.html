@@ -1,107 +1,210 @@
 {% extends "base.html" %}
-{% block title %}PromptVault — Explore AI Prompts{% endblock %}
+{% block title %}RohithBuilds — AI Prompts{% endblock %}
+
 
 {% block content %}
 
-<!-- Hero -->
+<!-- ═══════════ HERO ═══════════ -->
 <section class="hero">
-  <div class="hero-badge">✨ The AI Prompt Library</div>
-  <h1 class="hero-title">
-    Supercharge Your<br/>
-    <span class="gradient-text">AI Workflow</span>
-  </h1>
-  <p class="hero-sub">Discover, share, and collect the best prompts for ChatGPT, Claude, and more. Built by the community, for the community.</p>
-  <div class="hero-actions">
-    <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}" class="btn-primary">
-      Share a Prompt →
-    </a>
-    <a href="#prompts" class="btn-ghost">Browse Library</a>
-  </div>
-  <div class="hero-stats">
-    <div class="stat"><strong>{{ prompts|length }}</strong><span>Prompts</span></div>
-    <div class="stat-divider"></div>
-    <div class="stat"><strong>{{ categories|length }}</strong><span>Categories</span></div>
-    <div class="stat-divider"></div>
-    <div class="stat"><strong>Free</strong><span>Forever</span></div>
-  </div>
-</section>
+  <div class="hero-bg-grid"></div>
 
-<!-- Category Filter -->
-<section class="categories-bar" id="prompts">
-  <div class="container">
-    <div class="cat-pills">
-      <a href="{{ url_for('index') }}" class="cat-pill {% if not active_category %}active{% endif %}">
-        All
+  <div class="hero-inner">
+  
+    <!-- Badge -->
+    <div class="hero-badge" data-animate="fadeUp" data-delay="0">
+      <span class="badge-dot"></span>
+      <span>The Community AI Prompt Library</span>
+      <span class="badge-arrow">→</span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="hero-title" data-animate="fadeUp" data-delay="100">
+      <span class="title-line">Prompts that</span>
+      <span class="title-line gradient-shift">
+        <span class="typewriter-wrap">
+          <span id="typewriterText"></span><span class="tw-cursor">|</span>
+        </span>
+      </span>
+    </h1>
+
+    <p class="hero-sub" data-animate="fadeUp" data-delay="200">
+      Discover, share, and collect battle-tested AI prompts. 
+      Built by creators, for creators — completely free.
+    </p>
+
+    <!-- CTAs -->
+    <div class="hero-ctas" data-animate="fadeUp" data-delay="300">
+      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}" class="cta-primary">
+        <span class="cta-glow"></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Share a Prompt</span>
       </a>
-      {% for cat in categories %}
-        <a href="{{ url_for('index', category=cat, search=search) }}" class="cat-pill {% if active_category == cat %}active{% endif %}">
-          {{ cat }}
-        </a>
-      {% endfor %}
+      <a href="#explore" class="cta-secondary">
+        <span>Browse Library</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+      </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-stats" data-animate="fadeUp" data-delay="400">
+      <div class="hstat">
+        <span class="hstat-num" data-count="{{ prompts|length }}">0</span>
+        <span class="hstat-label">Prompts</span>
+      </div>
+      <div class="hstat-sep"></div>
+      <div class="hstat">
+        <span class="hstat-num" data-count="{{ categories|length }}">0</span>
+        <span class="hstat-label">Categories</span>
+      </div>
+      <div class="hstat-sep"></div>
+      <div class="hstat">
+        <span class="hstat-num">∞</span>
+        <span class="hstat-label">Possibilities</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating prompt cards -->
+  <div class="hero-floaters" aria-hidden="true">
+    <div class="floater f1">
+      <div class="floater-tag">Coding</div>
+      <div class="floater-text">You are an expert code reviewer. Analyze this code for bugs, security issues...</div>
+      <div class="floater-footer"><span>▲ 124</span><span>📋 Copy</span></div>
+    </div>
+    <div class="floater f2">
+      <div class="floater-tag">Marketing</div>
+      <div class="floater-text">Create a viral Twitter thread about [TOPIC] that hooks readers instantly...</div>
+      <div class="floater-footer"><span>▲ 89</span><span>📋 Copy</span></div>
+    </div>
+    <div class="floater f3">
+      <div class="floater-tag">Creative</div>
+      <div class="floater-text">You are an award-winning fiction writer. Write a short story with...</div>
+      <div class="floater-footer"><span>▲ 201</span><span>📋 Copy</span></div>
     </div>
   </div>
 </section>
 
-<!-- Prompts Grid -->
-<section class="prompts-section container">
-  {% if search %}
-    <p class="search-results-label">
-      {% if prompts %}
-        {{ prompts|length }} result{{ 's' if prompts|length != 1 }} for "<strong>{{ search }}</strong>"
-      {% else %}
-        No results for "<strong>{{ search }}</strong>"
-      {% endif %}
-    </p>
-  {% endif %}
+<!-- ═══════════ LIVE AI SHOWCASE ═══════════ -->
+<section class="showcase-section">
+  <div class="showcase-inner container">
+    <div class="showcase-label">
+      <span class="pulse-dot"></span> Live Prompt Preview
+    </div>
+    <div class="showcase-terminal">
+      <div class="terminal-bar">
+        <span class="tb-dot red"></span>
+        <span class="tb-dot yellow"></span>
+        <span class="tb-dot green"></span>
+        <span class="tb-title">promptvault ~ ai preview</span>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-prompt-line">
+          <span class="term-symbol">$</span>
+          <span class="term-cmd" id="termCategory">Loading prompt…</span>
+        </div>
+        <div class="terminal-output">
+          <span class="term-output-text" id="termOutput"></span>
+          <span class="term-cursor">▌</span>
+        </div>
+      </div>
+    </div>
+    <div class="showcase-dots" id="showcaseDots"></div>
+  </div>
+</section>
 
+<!-- ═══════════ CATEGORY FILTER ═══════════ -->
+<section class="filter-section" id="explore">
+  <div class="container">
+    <div class="filter-header">
+      <h2 class="section-title">Explore the Vault</h2>
+      <p class="section-sub">{{ prompts|length }} prompts across {{ categories|length }} categories</p>
+    </div>
+    <div class="cat-scroll">
+      <div class="cat-pills">
+        <a href="{{ url_for('index') }}" class="cpill {% if not active_category %}active{% endif %}">
+          <span class="cpill-icon">✦</span> All
+        </a>
+        {% set cat_icons = {'Writing':'✍️','Coding':'💻','Marketing':'📣','Business':'💼','Education':'🎓','Creative':'🎨','Research':'🔬','Productivity':'⚡','General':'🌐'} %}
+        {% for cat in categories %}
+          <a href="{{ url_for('index', category=cat, search=search) }}" class="cpill {% if active_category == cat %}active{% endif %}">
+            <span class="cpill-icon">{{ cat_icons.get(cat, '✦') }}</span>
+            {{ cat }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if search %}
+      <div class="search-label">
+        {% if prompts %}
+          <span class="search-count">{{ prompts|length }}</span> result{{ 's' if prompts|length != 1 }} for "<strong>{{ search }}</strong>"
+        {% else %}
+          No results for "<strong>{{ search }}</strong>" — <a href="{{ url_for('index') }}">clear search</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ═══════════ PROMPT GRID ═══════════ -->
+<section class="grid-section container">
   {% if prompts %}
-    <div class="prompts-grid">
+    <div class="prompts-grid" id="promptsGrid">
       {% for prompt in prompts %}
-        <div class="prompt-card" data-id="{{ prompt.id }}">
-          <div class="card-header">
-            <span class="card-cat cat-{{ prompt.category|lower }}">{{ prompt.category }}</span>
-            <div class="card-actions-top">
-              <button
-                class="btn-fav {% if prompt.id in user_favorites %}active{% endif %}"
-                onclick="toggleFavorite({{ prompt.id }}, this)"
-                title="Save to favorites"
-                {% if not current_user.is_authenticated %}onclick="window.location='/login'"{% endif %}
-              >
-                {% if prompt.id in user_favorites %}♥{% else %}♡{% endif %}
-              </button>
-            </div>
+        <article class="pcard" data-id="{{ prompt.id }}" style="--i:{{ loop.index0 }}">
+          <div class="pcard-glow"></div>
+          <div class="pcard-border"></div>
+
+          <div class="pcard-top">
+            <span class="pcat pcat-{{ prompt.category|lower }}">{{ prompt.category }}</span>
+            <button
+              class="pfav-btn {% if prompt.id in user_favorites %}active{% endif %}"
+              onclick="toggleFavorite({{ prompt.id }}, this)"
+              title="Save to favorites"
+            >
+              <svg viewBox="0 0 24 24" fill="{% if prompt.id in user_favorites %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
           </div>
 
-          <a href="{{ url_for('prompt_detail', prompt_id=prompt.id) }}" class="card-title-link">
-            <h3 class="card-title">{{ prompt.title }}</h3>
+          <a href="{{ url_for('prompt_detail', prompt_id=prompt.id) }}" class="pcard-link">
+            <h3 class="pcard-title">{{ prompt.title }}</h3>
           </a>
 
-          <p class="card-preview">{{ prompt.content[:140] }}{% if prompt.content|length > 140 %}…{% endif %}</p>
+          <p class="pcard-preview">{{ prompt.content[:130] }}{% if prompt.content|length > 130 %}…{% endif %}</p>
 
-          <div class="card-footer">
-            <div class="card-meta">
-              <span class="card-author">by {{ prompt.author.username }}</span>
-              <span class="card-date">{{ prompt.created_at.strftime('%b %d') }}</span>
+          <div class="pcard-footer">
+            <div class="pcard-author">
+              <div class="author-dot">{{ prompt.author.username[0].upper() }}</div>
+              <div>
+                <div class="author-name">{{ prompt.author.username }}</div>
+                <div class="author-date">{{ prompt.created_at.strftime('%b %d') }}</div>
+              </div>
             </div>
-            <div class="card-btns">
-              <button class="btn-like" onclick="likePrompt({{ prompt.id }}, this)" title="Like">
-                <span class="like-icon">▲</span>
-                <span class="like-count">{{ prompt.likes }}</span>
+            <div class="pcard-actions">
+              <button class="paction like-btn" onclick="likePrompt({{ prompt.id }}, this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                <span class="like-num">{{ prompt.likes }}</span>
               </button>
-              <button class="btn-copy" onclick="copyPrompt({{ prompt.id }}, `{{ prompt.content | replace('`', '\\`') | replace('\n', '\\n') }}`, this)" title="Copy prompt">
-                📋 Copy
+              <button class="paction copy-btn" onclick="copyPrompt({{ prompt.id }}, `{{ prompt.content | replace('`', '\\`') | replace('\n', '\\n') }}`, this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
               </button>
             </div>
           </div>
-        </div>
+        </article>
       {% endfor %}
     </div>
   {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">🔍</div>
-      <h3>No prompts found</h3>
-      <p>{% if search %}Try a different search term.{% else %}Be the first to add a prompt!{% endif %}</p>
-      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}" class="btn-primary">Add a Prompt</a>
+    <div class="empty-vault">
+      <div class="empty-orb"></div>
+      <h3>The vault is empty</h3>
+      <p>{% if search %}No prompts match your search.{% else %}Be the first to add a prompt!{% endif %}</p>
+      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}" class="cta-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Add First Prompt
+      </a>
     </div>
   {% endif %}
 </section>

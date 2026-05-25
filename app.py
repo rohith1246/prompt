@@ -178,8 +178,8 @@ def seed_database():
 
     # Create a seed user
     seed_user = User(
-        username="promptvault",
-        email="admin@promptvault.ai",
+         username="rohithbuilds",
+        email="admin@rohithbuilds.com",
         password_hash=generate_password_hash("admin123"),
     )
     db.session.add(seed_user)

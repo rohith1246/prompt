@@ -1,247 +1,332 @@
-/* ============================================================
-   PromptVault — main.js
-   Handles: like, favorite, copy, mobile nav, password toggle
-   ============================================================ */
-
 "use strict";
 
-// ── Mobile Nav Toggle ─────────────────────────────────────────
-const navToggle = document.getElementById("navToggle");
-const mobileMenu = document.getElementById("mobileMenu");
+/* ════════════════════════════════════════════════
+   PromptVault — Premium Interactions
+   ════════════════════════════════════════════════ */
 
+/* ── Particle Canvas ────────────────────────────── */
+(function initParticles() {
+  const canvas = document.getElementById("particleCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const COLORS = ["#3b82f6","#8b5cf6","#ec4899","#06b6d4"];
+  class Particle {
+    constructor() { this.reset(true) }
+    reset(init) {
+      this.x  = Math.random() * W;
+      this.y  = init ? Math.random() * H : H + 10;
+      this.r  = Math.random() * 1.5 + .3;
+      this.vx = (Math.random() - .5) * .3;
+      this.vy = -(Math.random() * .6 + .2);
+      this.alpha = Math.random() * .5 + .1;
+      this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.y < -10) this.reset(false);
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  const COUNT = window.innerWidth < 700 ? 20 : 40;
+  for (let i = 0; i < COUNT; i++) particles.push(new Particle());
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ── Navbar scroll shadow ───────────────────────── */
+const mainNav = document.getElementById("mainNav");
+window.addEventListener("scroll", () => {
+  if (mainNav) mainNav.classList.toggle("scrolled", window.scrollY > 20);
+}, { passive: true });
+
+/* ── Mobile Nav ─────────────────────────────────── */
+const navToggle  = document.getElementById("navToggle");
+const mobileMenu = document.getElementById("mobileMenu");
 if (navToggle && mobileMenu) {
   navToggle.addEventListener("click", () => {
-    mobileMenu.classList.toggle("open");
-    const spans = navToggle.querySelectorAll("span");
-    const isOpen = mobileMenu.classList.contains("open");
-    spans[0].style.transform = isOpen ? "rotate(45deg) translate(4px, 4px)" : "";
-    spans[1].style.opacity   = isOpen ? "0" : "1";
-    spans[2].style.transform = isOpen ? "rotate(-45deg) translate(4px, -4px)" : "";
+    const open = mobileMenu.classList.toggle("open");
+    const s = navToggle.querySelectorAll("span");
+    s[0].style.transform = open ? "rotate(45deg) translate(5px,5px)"  : "";
+    s[1].style.opacity   = open ? "0" : "1";
+    s[2].style.transform = open ? "rotate(-45deg) translate(5px,-5px)" : "";
   });
 }
 
-// ── Auto-dismiss flash messages ───────────────────────────────
-document.querySelectorAll(".flash").forEach((el) => {
+/* ── Scroll-triggered entrance animations ───────── */
+const scrollObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const delay = entry.target.dataset.delay || 0;
+      setTimeout(() => entry.target.classList.add("visible"), +delay);
+      scrollObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll("[data-animate]").forEach(el => scrollObserver.observe(el));
+
+/* ── Animated stat counters ─────────────────────── */
+function animateCount(el, target, duration = 1200) {
+  const start = performance.now();
+  const update = (now) => {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target);
+    if (progress < 1) requestAnimationFrame(update);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(update);
+}
+
+const statObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const target = parseInt(entry.target.dataset.count);
+      if (!isNaN(target)) animateCount(entry.target, target);
+      statObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll("[data-count]").forEach(el => statObserver.observe(el));
+
+/* ── Typewriter Hero ────────────────────────────── */
+const TW_WORDS = [
+  "supercharge your work",
+  "unlock creativity",
+  "10x your output",
+  "spark ideas instantly",
+  "write like a pro",
+  "code smarter"
+];
+let twIndex = 0, twChar = 0, twDeleting = false;
+const twEl = document.getElementById("typewriterText");
+
+function typewriterTick() {
+  if (!twEl) return;
+  const word = TW_WORDS[twIndex];
+  if (!twDeleting) {
+    twEl.textContent = word.slice(0, ++twChar);
+    if (twChar === word.length) {
+      twDeleting = true;
+      setTimeout(typewriterTick, 2000);
+      return;
+    }
+    setTimeout(typewriterTick, 55);
+  } else {
+    twEl.textContent = word.slice(0, --twChar);
+    if (twChar === 0) {
+      twDeleting = false;
+      twIndex = (twIndex + 1) % TW_WORDS.length;
+      setTimeout(typewriterTick, 400);
+      return;
+    }
+    setTimeout(typewriterTick, 30);
+  }
+}
+setTimeout(typewriterTick, 800);
+
+/* ── Terminal Showcase ──────────────────────────── */
+const SHOWCASE_PROMPTS = [
+  { cat: "prompt-vault › coding", text: "You are a senior code reviewer. Analyze this code for bugs, security vulnerabilities, and performance issues. Provide specific, actionable feedback with examples..." },
+  { cat: "prompt-vault › marketing", text: "Create a viral Twitter thread about [TOPIC]. Hook readers with the first tweet, use punchy sentences, include surprising insights, and end with a strong call-to-action..." },
+  { cat: "prompt-vault › writing", text: "You are an award-winning editor. Rewrite this text to be 50% shorter while preserving all key information. Use active voice, cut filler words, and make every sentence count..." },
+  { cat: "prompt-vault › business", text: "Act as a startup advisor. Evaluate my idea: [IDEA]. Give me strengths, weaknesses, target market estimate, MVP suggestion, and a score out of 10..." },
+  { cat: "prompt-vault › education", text: "You are a world-class tutor. Teach me [CONCEPT] using: a simple real-world analogy, step-by-step explanation, 2 practical examples, and a quick quiz question..." },
+];
+
+let scIndex = 0, scTyping = false;
+const termOutput   = document.getElementById("termOutput");
+const termCategory = document.getElementById("termCategory");
+const dotsWrap     = document.getElementById("showcaseDots");
+
+if (dotsWrap) {
+  SHOWCASE_PROMPTS.forEach((_, i) => {
+    const d = document.createElement("div");
+    d.className = "sdot" + (i === 0 ? " active" : "");
+    d.addEventListener("click", () => loadShowcase(i));
+    dotsWrap.appendChild(d);
+  });
+}
+
+function updateDots(index) {
+  document.querySelectorAll(".sdot").forEach((d, i) =>
+    d.classList.toggle("active", i === index));
+}
+
+function typeTerminal(text, callback) {
+  if (!termOutput) return;
+  termOutput.textContent = "";
+  let i = 0;
+  const tick = () => {
+    if (i < text.length) {
+      termOutput.textContent += text[i++];
+      setTimeout(tick, Math.random() * 18 + 8);
+    } else if (callback) {
+      setTimeout(callback, 2800);
+    }
+  };
+  tick();
+}
+
+function loadShowcase(index) {
+  if (scTyping) return;
+  scTyping = true;
+  scIndex = index;
+  const p = SHOWCASE_PROMPTS[index];
+  if (termCategory) termCategory.textContent = p.cat;
+  updateDots(index);
+  if (termOutput) termOutput.textContent = "";
+  typeTerminal(p.text, () => {
+    scTyping = false;
+    scIndex  = (scIndex + 1) % SHOWCASE_PROMPTS.length;
+    setTimeout(() => loadShowcase(scIndex), 400);
+  });
+}
+
+if (termOutput) setTimeout(() => loadShowcase(0), 600);
+
+/* ── Flash auto-dismiss ─────────────────────────── */
+document.querySelectorAll(".flash").forEach(el => {
   setTimeout(() => {
+    el.style.transition = "opacity .4s, transform .4s";
     el.style.opacity = "0";
-    el.style.transform = "translateX(120%)";
-    el.style.transition = "all .4s ease";
+    el.style.transform = "translateX(20px) scale(.95)";
     setTimeout(() => el.remove(), 400);
   }, 4500);
 });
 
-// ── Like Prompt (grid card) ───────────────────────────────────
-function likePrompt(promptId, btn) {
+/* ── Like prompt (grid) ─────────────────────────── */
+function likePrompt(id, btn) {
   if (btn.classList.contains("liked")) return;
-
-  fetch(`/api/like/${promptId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => {
-      if (res.status === 401) {
-        window.location.href = "/login";
-        return null;
-      }
-      return res.json();
-    })
-    .then((data) => {
-      if (!data) return;
-      btn.querySelector(".like-count").textContent = data.likes;
+  fetch(`/api/like/${id}`, { method: "POST" })
+    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(d => {
+      if (!d) return;
+      btn.querySelector(".like-num").textContent = d.likes;
       btn.classList.add("liked");
-      // Pulse animation
-      btn.style.transform = "scale(1.15)";
-      setTimeout(() => (btn.style.transform = ""), 200);
-    })
-    .catch(console.error);
+      btn.style.transform = "scale(1.2)";
+      setTimeout(() => btn.style.transform = "", 200);
+    }).catch(console.error);
 }
 
-// ── Like Prompt (detail page) ─────────────────────────────────
-function likePromptDetail(promptId, btn) {
+/* ── Like prompt (detail) ───────────────────────── */
+function likePromptDetail(id, btn) {
   if (btn.classList.contains("liked")) return;
-
-  fetch(`/api/like/${promptId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => {
-      if (res.status === 401) { window.location.href = "/login"; return null; }
-      return res.json();
-    })
-    .then((data) => {
-      if (!data) return;
-      document.getElementById("likeCount").textContent = data.likes;
+  fetch(`/api/like/${id}`, { method: "POST" })
+    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(d => {
+      if (!d) return;
+      document.getElementById("likeCount").textContent = d.likes;
       btn.classList.add("liked");
       btn.style.color = "var(--gold)";
-      btn.style.borderColor = "var(--gold)";
-    })
-    .catch(console.error);
+      btn.style.borderColor = "rgba(245,158,11,.4)";
+    }).catch(console.error);
 }
 
-// ── Toggle Favorite (grid card) ───────────────────────────────
-function toggleFavorite(promptId, btn) {
-  fetch(`/api/favorite/${promptId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => {
-      if (res.status === 401) { window.location.href = "/login"; return null; }
-      return res.json();
-    })
-    .then((data) => {
-      if (!data) return;
-      if (data.status === "added") {
+/* ── Toggle favorite (grid) ─────────────────────── */
+function toggleFavorite(id, btn) {
+  fetch(`/api/favorite/${id}`, { method: "POST" })
+    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(d => {
+      if (!d) return;
+      const svg = btn.querySelector("svg");
+      if (d.status === "added") {
         btn.classList.add("active");
-        btn.textContent = "♥";
-        btn.title = "Remove from favorites";
+        svg.setAttribute("fill", "currentColor");
       } else {
         btn.classList.remove("active");
-        btn.textContent = "♡";
-        btn.title = "Save to favorites";
-        // If on favorites page, remove the card
-        if (window.location.pathname === "/favorites") {
-          const card = btn.closest(".prompt-card");
+        svg.setAttribute("fill", "none");
+        if (location.pathname === "/favorites") {
+          const card = btn.closest(".pcard");
           if (card) {
-            card.style.opacity = "0";
-            card.style.transform = "scale(0.95)";
-            card.style.transition = "all .3s";
-            setTimeout(() => {
-              card.remove();
-              checkEmptyFavorites();
-            }, 300);
+            card.style.transition = "opacity .3s, transform .3s";
+            card.style.opacity = "0"; card.style.transform = "scale(.94)";
+            setTimeout(() => { card.remove(); if (!document.querySelector(".pcard")) location.reload(); }, 300);
           }
         }
       }
-    })
-    .catch(console.error);
+    }).catch(console.error);
 }
 
-function checkEmptyFavorites() {
-  const grid = document.querySelector(".prompts-grid");
-  if (grid && grid.children.length === 0) {
-    window.location.reload();
-  }
+/* ── Toggle favorite (detail) ───────────────────── */
+function toggleFavDetail(id, btn) {
+  fetch(`/api/favorite/${id}`, { method: "POST" })
+    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(d => {
+      if (!d) return;
+      btn.classList.toggle("active", d.status === "added");
+      btn.textContent = d.status === "added" ? "♥ Saved" : "♡ Save";
+    }).catch(console.error);
 }
 
-// ── Toggle Favorite (detail page) ────────────────────────────
-function toggleFavDetail(promptId, btn) {
-  fetch(`/api/favorite/${promptId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => {
-      if (res.status === 401) { window.location.href = "/login"; return null; }
-      return res.json();
-    })
-    .then((data) => {
-      if (!data) return;
-      if (data.status === "added") {
-        btn.classList.add("active");
-        btn.textContent = "♥ Saved";
-      } else {
-        btn.classList.remove("active");
-        btn.textContent = "♡ Save";
-      }
-    })
-    .catch(console.error);
-}
-
-// ── Copy Prompt (grid card) ───────────────────────────────────
-function copyPrompt(promptId, content, btn) {
-  // Unescape newlines
+/* ── Copy prompt (grid) ─────────────────────────── */
+function copyPrompt(id, content, btn) {
   const text = content.replace(/\\n/g, "\n");
-
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      const original = btn.innerHTML;
-      btn.innerHTML = "✅ Copied!";
-      btn.classList.add("copied");
-      setTimeout(() => {
-        btn.innerHTML = original;
-        btn.classList.remove("copied");
-      }, 2200);
-    })
-    .catch(() => {
-      // Fallback for older browsers
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      btn.innerHTML = "✅ Copied!";
-      setTimeout(() => (btn.innerHTML = "📋 Copy"), 2200);
-    });
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Copied!</span>`;
+    btn.classList.add("copied");
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove("copied"); }, 2200);
+  }).catch(() => fallbackCopy(text, btn));
 }
 
-// ── Copy Prompt (detail page) ─────────────────────────────────
+/* ── Copy prompt (detail) ───────────────────────── */
 function copyDetailPrompt(btn) {
-  const promptText = document.getElementById("promptContent").textContent;
-  navigator.clipboard
-    .writeText(promptText)
-    .then(() => {
-      const original = btn.textContent;
-      btn.textContent = "✅ Copied!";
-      btn.classList.add("copied");
-      setTimeout(() => {
-        btn.textContent = original;
-        btn.classList.remove("copied");
-      }, 2500);
-    })
-    .catch(() => {
-      const ta = document.createElement("textarea");
-      ta.value = promptText;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      btn.textContent = "✅ Copied!";
-      setTimeout(() => (btn.textContent = "📋 Copy Prompt"), 2500);
-    });
+  const text = document.getElementById("promptContent").textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = "✓ Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 2500);
+  }).catch(() => fallbackCopy(text, btn));
 }
 
-// ── Password Toggle ───────────────────────────────────────────
-function togglePassword(fieldId, btn) {
-  const field = document.getElementById(fieldId);
-  if (!field) return;
-  if (field.type === "password") {
-    field.type = "text";
-    btn.textContent = "🙈";
-  } else {
-    field.type = "password";
-    btn.textContent = "👁";
-  }
+function fallbackCopy(text, btn) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  document.body.appendChild(ta); ta.select();
+  document.execCommand("copy"); document.body.removeChild(ta);
+  if (btn) { const o = btn.textContent; btn.textContent = "✓ Copied!"; setTimeout(() => btn.textContent = o, 2000); }
 }
 
-// ── Smooth scroll for hero CTA ────────────────────────────────
-document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-  anchor.addEventListener("click", function (e) {
-    const target = document.querySelector(this.getAttribute("href"));
-    if (target) {
-      e.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+/* ── Password toggle ────────────────────────────── */
+function togglePassword(id, btn) {
+  const f = document.getElementById(id);
+  if (!f) return;
+  f.type = f.type === "password" ? "text" : "password";
+  btn.textContent = f.type === "text" ? "🙈" : "👁";
+}
+
+/* ── Smooth scroll ──────────────────────────────── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener("click", e => {
+    const t = document.querySelector(a.getAttribute("href"));
+    if (t) { e.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" }); }
   });
-});
-
-// ── Card entrance animation ───────────────────────────────────
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = "1";
-        entry.target.style.transform = "translateY(0)";
-        observer.unobserve(entry.target);
-      }
-    });
-  },
-  { threshold: 0.08 }
-);
-
-document.querySelectorAll(".prompt-card").forEach((card, i) => {
-  card.style.opacity = "0";
-  card.style.transform = "translateY(20px)";
-  card.style.transition = `opacity .45s ease ${i * 0.06}s, transform .45s ease ${i * 0.06}s`;
-  observer.observe(card);
 });

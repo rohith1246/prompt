@@ -1,106 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}PromptVault{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}RohithBuilds{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
 </head>
 <body>
 
-  <!-- Ambient background orbs -->
-  <div class="bg-orb orb-1"></div>
-  <div class="bg-orb orb-2"></div>
-  <div class="bg-orb orb-3"></div>
+<!-- ═══════════ CANVAS PARTICLE BG ═══════════ -->
+<canvas id="particleCanvas"></canvas>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="nav-container">
-      <a href="{{ url_for('index') }}" class="nav-logo">
-        <span class="logo-icon">⚡</span>
-        <span>PromptVault</span>
-      </a>
+<!-- ═══════════ NOISE OVERLAY ═══════════ -->
+<div class="noise-overlay"></div>
 
-      <div class="nav-center">
-        <form action="{{ url_for('index') }}" method="GET" class="nav-search-form">
-          <input type="text" name="search" value="{{ search if search else '' }}" placeholder="Search prompts…" class="nav-search-input" />
-          <button type="submit" class="nav-search-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          </button>
-        </form>
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar" id="mainNav">
+  <div class="nav-container">
+
+    <a href="{{ url_for('index') }}" class="nav-logo">
+      <div class="logo-mark">
+        <div class="logo-hex"></div>
+        <span class="logo-bolt">⚡</span>
       </div>
+      <span class="logo-text">Rohith<span class="logo-accent">Builds</span></span>
+    </a>
 
-      <div class="nav-links">
-        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Explore</a>
-        {% if current_user.is_authenticated %}
-          <a href="{{ url_for('favorites') }}" class="nav-link">Favorites</a>
-          <a href="{{ url_for('create_prompt') }}" class="btn-nav-cta">+ New Prompt</a>
-          <div class="nav-avatar-wrap">
-            <a href="{{ url_for('dashboard') }}" class="nav-avatar" title="{{ current_user.username }}">
-              {{ current_user.username[0].upper() }}
-            </a>
-            <a href="{{ url_for('logout') }}" class="nav-link nav-logout">Logout</a>
-          </div>
-        {% else %}
-          <a href="{{ url_for('login') }}" class="nav-link">Login</a>
-          <a href="{{ url_for('register') }}" class="btn-nav-cta">Sign Up Free</a>
-        {% endif %}
-      </div>
-
-      <button class="nav-hamburger" id="navToggle" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+    <div class="nav-center">
+      <form action="{{ url_for('index') }}" method="GET" class="nav-search-form">
+        <div class="search-icon-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <input type="text" name="search" value="{{ search if search else '' }}" placeholder="Search the vault…" class="nav-search-input"/>
+        <kbd class="search-kbd">⌘K</kbd>
+      </form>
     </div>
 
-    <!-- Mobile menu -->
-    <div class="nav-mobile-menu" id="mobileMenu">
-      <form action="{{ url_for('index') }}" method="GET" class="mobile-search">
-        <input type="text" name="search" placeholder="Search prompts…" />
-        <button type="submit">Search</button>
-      </form>
-      <a href="{{ url_for('index') }}">Explore</a>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+        <span>Explore</span>
+      </a>
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('favorites') }}">Favorites</a>
-        <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('create_prompt') }}">+ New Prompt</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
+        <a href="{{ url_for('favorites') }}" class="nav-link">
+          <span>Saved</span>
+        </a>
+        <a href="{{ url_for('create_prompt') }}" class="nav-cta-btn">
+          <span class="btn-shimmer"></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <span>New Prompt</span>
+        </a>
+        <div class="nav-user-wrap">
+          <a href="{{ url_for('dashboard') }}" class="nav-user-btn" title="{{ current_user.username }}">
+            <div class="user-ring"></div>
+            <span>{{ current_user.username[0].upper() }}</span>
+          </a>
+          <div class="nav-user-dropdown">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('favorites') }}">Favorites</a>
+            <div class="dropdown-divider"></div>
+            <a href="{{ url_for('logout') }}" class="dropdown-logout">Logout</a>
+          </div>
+        </div>
       {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('register') }}">Sign Up Free</a>
+        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+        <a href="{{ url_for('register') }}" class="nav-cta-btn">
+          <span class="btn-shimmer"></span>
+          <span>Get Started</span>
+        </a>
       {% endif %}
     </div>
-  </nav>
 
-  <!-- Flash messages -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-container">
-        {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">
-            <span>{{ message }}</span>
-            <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
-          </div>
-        {% endfor %}
-      </div>
+    <button class="nav-hamburger" id="navToggle">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="nav-mobile-menu" id="mobileMenu">
+    <form action="{{ url_for('index') }}" method="GET" class="mobile-search-form">
+      <input type="text" name="search" placeholder="Search prompts…"/>
+      <button type="submit">→</button>
+    </form>
+    <a href="{{ url_for('index') }}">Explore</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('favorites') }}">Saved Prompts</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('create_prompt') }}">+ New Prompt</a>
+      <a href="{{ url_for('logout') }}" style="color:#ff4f6a">Logout</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('register') }}">Sign Up Free →</a>
     {% endif %}
-  {% endwith %}
+  </div>
+</nav>
 
-  <!-- Main content -->
-  <main class="main-content">
-    {% block content %}{% endblock %}
-  </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <span class="footer-logo">⚡ PromptVault</span>
-      <span class="footer-copy">Built for the AI generation · 2024</span>
+<!-- ═══════════ FLASH MESSAGES ═══════════ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <div class="flash-icon">{% if category == 'success' %}✓{% elif category == 'danger' %}✕{% else %}i{% endif %}</div>
+          <span>{{ message }}</span>
+          <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      {% endfor %}
     </div>
-  </footer>
+  {% endif %}
+{% endwith %}
 
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer">
+  <div class="footer-glow"></div>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="footer-logo">⚡ RohithBuilds</span>
+<p>Built by Rohith · For the AI generation.</p>
+    </div>
+    <div class="footer-links">
+      <a href="{{ url_for('index') }}">Explore</a>
+      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}">Share Prompt</a>
+      <a href="{{ url_for('login') }}">Login</a>
+    </div>
+    <p class="footer-copy">© 2026 PromptVault · Built for the AI generation</p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
