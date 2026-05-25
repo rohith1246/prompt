@@ -31,7 +31,7 @@
     <div class="detail-content-box">
       <div class="detail-content-header">
         <span class="detail-content-label">📝 Prompt</span>
-        <button class="btn-copy-lg" id="copyBtn" onclick="copyDetailPrompt(this)">
+        <button class="btn-copy-lg" id="copyBtn" onclick="copyDetailPrompt({{ prompt.id }}, this)">
           📋 Copy Prompt
         </button>
       </div>
@@ -85,6 +85,10 @@
       <div class="sidebar-info-row">
         <span>Likes</span>
         <strong>{{ prompt.likes }}</strong>
+      </div>
+      <div class="sidebar-info-row">
+        <span>Copies</span>
+        <strong>{{ prompt.copies or 0 }}</strong>
       </div>
     </div>
 

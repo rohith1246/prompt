@@ -60,6 +60,9 @@
           <div class="nav-user-dropdown">
             <a href="{{ url_for('dashboard') }}">Dashboard</a>
             <a href="{{ url_for('favorites') }}">Favorites</a>
+            {% if is_admin %}
+              <a href="{{ url_for('admin') }}">Admin Panel</a>
+            {% endif %}
             <div class="dropdown-divider"></div>
             <a href="{{ url_for('logout') }}" class="dropdown-logout">Logout</a>
           </div>
@@ -87,6 +90,9 @@
     {% if current_user.is_authenticated %}
       <a href="{{ url_for('favorites') }}">Saved Prompts</a>
       <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      {% if is_admin %}
+        <a href="{{ url_for('admin') }}">Admin Panel</a>
+      {% endif %}
       <a href="{{ url_for('create_prompt') }}">+ New Prompt</a>
       <a href="{{ url_for('logout') }}" style="color:#ff4f6a">Logout</a>
     {% else %}

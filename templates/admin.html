@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — PromptVault{% endblock %}
+
+{% block content %}
+<div class="container admin-page">
+  <div class="page-header admin-header">
+    <div>
+      <span class="page-badge">Admin</span>
+      <h1>Admin dashboard</h1>
+      <p>Overview of users, prompts, likes, and copy activity across the vault.</p>
+    </div>
+  </div>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <span class="stat-label">Total users</span>
+      <strong>{{ user_count }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Total prompts</span>
+      <strong>{{ prompt_count }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Total likes</span>
+      <strong>{{ total_likes }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Total copies</span>
+      <strong>{{ total_copies }}</strong>
+    </article>
+  </section>
+
+  <section class="admin-table-card">
+    <div class="card">
+      <div class="card-header">
+        <h2>Top prompt activity</h2>
+        <p>Most popular prompts by likes and copy count.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Prompt</th>
+              <th>Author</th>
+              <th>Likes</th>
+              <th>Copies</th>
+              <th>Published</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prompt in top_prompts %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('prompt_detail', prompt_id=prompt.id) }}">{{ prompt.title }}</a></td>
+                <td>{{ prompt.author.username }}</td>
+                <td>{{ prompt.likes }}</td>
+                <td>{{ prompt.copies or 0 }}</td>
+                <td>{{ prompt.created_at.strftime('%b %d, %Y') }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6">No prompts yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

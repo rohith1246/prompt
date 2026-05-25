@@ -3,6 +3,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import inspect, text, func
 from sqlalchemy.exc import IntegrityError
 from models import db, User, Prompt, Favorite
 from forms import RegisterForm, LoginForm, PromptForm, CATEGORIES
@@ -12,6 +13,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-dev-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///prompts.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL", "admin@rohithbuilds.com")
 
 db.init_app(app)
 csrf = CSRFProtect(app)
@@ -19,7 +21,11 @@ csrf = CSRFProtect(app)
 # Make csrf_token() available in all templates
 @app.context_processor
 def inject_csrf_token():
-    return dict(csrf_token=generate_csrf)
+    is_admin = (
+        current_user.is_authenticated
+        and getattr(current_user, "email", None) == app.config["ADMIN_EMAIL"]
+    )
+    return dict(csrf_token=generate_csrf, is_admin=is_admin)
 
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
@@ -359,6 +365,29 @@ def delete_prompt(prompt_id):
     return redirect(url_for("dashboard"))
 
 
+@app.route("/admin", endpoint="admin")
+@login_required
+def admin():
+    if not (current_user.is_authenticated and getattr(current_user, "email", None) == app.config["ADMIN_EMAIL"]):
+        flash("Admin access only.", "danger")
+        return redirect(url_for("dashboard"))
+
+    user_count = User.query.count()
+    prompt_count = Prompt.query.count()
+    total_likes = db.session.query(func.coalesce(func.sum(Prompt.likes), 0)).scalar() or 0
+    total_copies = db.session.query(func.coalesce(func.sum(Prompt.copies), 0)).scalar() or 0
+    top_prompts = Prompt.query.order_by(Prompt.likes.desc(), Prompt.copies.desc()).limit(10).all()
+
+    return render_template(
+        "admin.html",
+        user_count=user_count,
+        prompt_count=prompt_count,
+        total_likes=total_likes,
+        total_copies=total_copies,
+        top_prompts=top_prompts,
+    )
+
+
 @app.route("/favorites")
 @login_required
 def favorites():
@@ -377,6 +406,15 @@ def like_prompt(prompt_id):
     prompt.likes += 1
     db.session.commit()
     return jsonify({"likes": prompt.likes})
+
+
+@app.route("/api/copy/<int:prompt_id>", methods=["POST"])
+@csrf.exempt
+def record_copy(prompt_id):
+    prompt = Prompt.query.get_or_404(prompt_id)
+    prompt.copies = (prompt.copies or 0) + 1
+    db.session.commit()
+    return jsonify({"copies": prompt.copies})
 
 
 @app.route("/api/favorite/<int:prompt_id>", methods=["POST"])
@@ -399,6 +437,12 @@ def toggle_favorite(prompt_id):
 # ── Initialize DB on startup ───────────────────────────────────────────────
 with app.app_context():
     db.create_all()
+    inspector = inspect(db.engine)
+    if "prompts" in inspector.get_table_names():
+        prompt_columns = [col["name"] for col in inspector.get_columns("prompts")]
+        if "copies" not in prompt_columns:
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE prompts ADD COLUMN copies INTEGER DEFAULT 0"))
     seed_database()
 
 # ── Entry point ───────────────────────────────────────────────────────────────

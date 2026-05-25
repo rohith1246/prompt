@@ -292,17 +292,19 @@ function copyPrompt(id, content, btn) {
     const orig = btn.innerHTML;
     btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Copied!</span>`;
     btn.classList.add("copied");
+    fetch(`/api/copy/${id}`, { method: "POST" }).catch(console.error);
     setTimeout(() => { btn.innerHTML = orig; btn.classList.remove("copied"); }, 2200);
   }).catch(() => fallbackCopy(text, btn));
 }
 
 /* ── Copy prompt (detail) ───────────────────────── */
-function copyDetailPrompt(btn) {
+function copyDetailPrompt(id, btn) {
   const text = document.getElementById("promptContent").textContent;
   navigator.clipboard.writeText(text).then(() => {
     const orig = btn.textContent;
     btn.textContent = "✓ Copied!";
     btn.classList.add("copied");
+    fetch(`/api/copy/${id}`, { method: "POST" }).catch(console.error);
     setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 2500);
   }).catch(() => fallbackCopy(text, btn));
 }
