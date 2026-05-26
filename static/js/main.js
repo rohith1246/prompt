@@ -225,7 +225,15 @@ document.querySelectorAll(".flash").forEach(el => {
 function likePrompt(id, btn) {
   if (btn.classList.contains("liked")) return;
   fetch(`/api/like/${id}`, { method: "POST" })
-    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(r => {
+      if (r.status === 401) { location.href="/login"; return null; }
+      if (r.status === 403) {
+        const errorMsg = "Please verify your email to like prompts.";
+        alert(errorMsg);
+        return null;
+      }
+      return r.json();
+    })
     .then(d => {
       if (!d) return;
       btn.querySelector(".like-num").textContent = d.likes;
@@ -239,7 +247,15 @@ function likePrompt(id, btn) {
 function likePromptDetail(id, btn) {
   if (btn.classList.contains("liked")) return;
   fetch(`/api/like/${id}`, { method: "POST" })
-    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(r => {
+      if (r.status === 401) { location.href="/login"; return null; }
+      if (r.status === 403) {
+        const errorMsg = "Please verify your email to like prompts.";
+        alert(errorMsg);
+        return null;
+      }
+      return r.json();
+    })
     .then(d => {
       if (!d) return;
       document.getElementById("likeCount").textContent = d.likes;
@@ -252,7 +268,15 @@ function likePromptDetail(id, btn) {
 /* ── Toggle favorite (grid) ─────────────────────── */
 function toggleFavorite(id, btn) {
   fetch(`/api/favorite/${id}`, { method: "POST" })
-    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(r => {
+      if (r.status === 401) { location.href="/login"; return null; }
+      if (r.status === 403) {
+        const errorMsg = "Please verify your email to save favorites.";
+        alert(errorMsg);
+        return null;
+      }
+      return r.json();
+    })
     .then(d => {
       if (!d) return;
       const svg = btn.querySelector("svg");
@@ -275,9 +299,18 @@ function toggleFavorite(id, btn) {
 }
 
 /* ── Toggle favorite (detail) ───────────────────── */
+/* ── Toggle favorite (detail) ───────────────────── */
 function toggleFavDetail(id, btn) {
   fetch(`/api/favorite/${id}`, { method: "POST" })
-    .then(r => { if (r.status === 401) { location.href="/login"; return null; } return r.json(); })
+    .then(r => {
+      if (r.status === 401) { location.href="/login"; return null; }
+      if (r.status === 403) {
+        const errorMsg = "Please verify your email to save favorites.";
+        alert(errorMsg);
+        return null;
+      }
+      return r.json();
+    })
     .then(d => {
       if (!d) return;
       btn.classList.toggle("active", d.status === "added");

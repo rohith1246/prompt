@@ -3,6 +3,22 @@
 
 {% block content %}
 <div class="container dashboard-page">
+  <!-- Email Verification Banner -->
+  {% if not current_user.is_verified %}
+  <div class="verification-banner">
+    <div class="verification-content">
+      <div class="verification-icon">📧</div>
+      <div class="verification-text">
+        <strong>Verify your email to unlock all features</strong>
+        <p>Create prompts, save favorites, and more. Check your inbox for the verification link.</p>
+      </div>
+      <form method="POST" action="{{ url_for('resend_verification') }}" style="margin: 0;">
+        <button type="submit" class="btn-verification">Resend Email</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Dashboard Header -->
   <div class="dash-header">
     <div class="dash-avatar">{{ current_user.username[0].upper() }}</div>

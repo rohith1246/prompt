@@ -2,11 +2,15 @@ import os
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect, text, func
 from sqlalchemy.exc import IntegrityError
+from itsdangerous import URLSafeTimedSerializer
 from models import db, User, Prompt, Favorite
 from forms import RegisterForm, LoginForm, PromptForm, CATEGORIES
+from dotenv import load_dotenv
+load_dotenv()
 
 # ── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -15,7 +19,16 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///prompts.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL", "admin@rohithbuilds.com")
 
+# ── Flask-Mail Configuration ──────────────────────────────────────────────────
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", True)
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "RohithBuilds <noreply@rohithbuilds.com>")
+
 db.init_app(app)
+mail = Mail(app)
 csrf = CSRFProtect(app)
 
 # Make csrf_token() available in all templates
@@ -36,6 +49,46 @@ login_manager.login_message_category = "info"
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+
+# ── Email Verification Helpers ────────────────────────────────────────────────
+def generate_verification_token(email):
+    """Generate a verification token for email confirmation."""
+    serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+    return serializer.dumps(email, salt="email-confirm-salt")
+
+
+def verify_token(token, expiration=3600):
+    """Verify a token and return the email if valid. Tokens expire after 1 hour."""
+    serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+    try:
+        email = serializer.loads(token, salt="email-confirm-salt", max_age=expiration)
+        return email
+    except Exception:
+        return None
+
+
+def send_verification_email(user):
+    """Send verification email to user."""
+    token = generate_verification_token(user.email)
+    verify_url = url_for("verify_email", token=token, _external=True)
+    
+    msg = Message(
+        subject="Verify Your Email - RohithBuilds",
+        recipients=[user.email],
+        html=render_template(
+            "email/verify_email.html",
+            username=user.username.title(),
+            verify_url=verify_url
+        )
+    )
+    
+    try:
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"❌ Email sending failed: {e}")
+        return False
 
 
 # ── Seed data ─────────────────────────────────────────────────────────────────
@@ -218,17 +271,66 @@ def register():
             username=form.username.data,
             email=form.email.data,
             password_hash=hashed_pw,
+            is_verified=False,
         )
         db.session.add(user)
         try:
             db.session.commit()
-            login_user(user)
-            flash("Welcome to PromptVault! 🎉", "success")
-            return redirect(url_for("dashboard"))
+            # Send verification email
+            if send_verification_email(user):
+                flash(
+                    f"Welcome to PromptVault, {user.username.title()}! 🎉 Check {user.email} for your verification link and come back to start creating prompts.",
+                    "success"
+                )
+            else:
+                flash(
+                    "Your account is ready! We couldn't send the email right now, but you can resend verification from your dashboard.",
+                    "warning"
+                )
+            return redirect(url_for("login"))
         except IntegrityError:
             db.session.rollback()
             flash("Something went wrong. Please try again.", "danger")
     return render_template("register.html", form=form)
+
+
+@app.route("/verify-email/<token>")
+def verify_email(token):
+    """Verify user email via token link."""
+    email = verify_token(token)
+    if not email:
+        flash("The verification link is invalid or has expired. Please sign up again.", "danger")
+        return redirect(url_for("register"))
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("User not found. Please sign up.", "danger")
+        return redirect(url_for("register"))
+    
+    if user.is_verified:
+        flash("Your email is already verified! You can log in now.", "info")
+        return redirect(url_for("login"))
+    
+    user.is_verified = True
+    db.session.commit()
+    flash("✅ Email verified successfully! You can now log in and use all features.", "success")
+    return redirect(url_for("login"))
+
+
+@app.route("/resend-verification", methods=["POST"])
+@login_required
+def resend_verification():
+    """Resend verification email if user is not verified."""
+    if current_user.is_verified:
+        flash("Your email is already verified!", "info")
+        return redirect(url_for("dashboard"))
+    
+    if send_verification_email(current_user):
+        flash(f"Verification email sent to {current_user.email}", "success")
+    else:
+        flash("Failed to send verification email. Please try again.", "danger")
+    
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -319,6 +421,10 @@ def prompt_detail(prompt_id):
 @app.route("/create", methods=["GET", "POST"])
 @login_required
 def create_prompt():
+    if not current_user.is_verified:
+        flash("Please verify your email before creating prompts. Check your inbox for the verification link.", "warning")
+        return redirect(url_for("dashboard"))
+    
     form = PromptForm()
     if form.validate_on_submit():
         prompt = Prompt(
@@ -341,6 +447,11 @@ def edit_prompt(prompt_id):
     if prompt.user_id != current_user.id:
         flash("You can only edit your own prompts.", "danger")
         return redirect(url_for("index"))
+    
+    if not current_user.is_verified:
+        flash("Please verify your email before editing prompts.", "warning")
+        return redirect(url_for("dashboard"))
+    
     form = PromptForm(obj=prompt)
     if form.validate_on_submit():
         prompt.title = form.title.data
@@ -402,6 +513,9 @@ def favorites():
 @csrf.exempt
 @login_required
 def like_prompt(prompt_id):
+    if not current_user.is_verified:
+        return jsonify({"error": "Please verify your email to like prompts."}), 403
+
     prompt = Prompt.query.get_or_404(prompt_id)
     prompt.likes += 1
     db.session.commit()
@@ -421,6 +535,9 @@ def record_copy(prompt_id):
 @csrf.exempt
 @login_required
 def toggle_favorite(prompt_id):
+    if not current_user.is_verified:
+        return jsonify({"error": "Please verify your email to save favorites."}), 403
+
     prompt = Prompt.query.get_or_404(prompt_id)
     existing = Favorite.query.filter_by(user_id=current_user.id, prompt_id=prompt_id).first()
     if existing:
@@ -438,13 +555,23 @@ def toggle_favorite(prompt_id):
 with app.app_context():
     db.create_all()
     inspector = inspect(db.engine)
-    if "prompts" in inspector.get_table_names():
+    table_names = inspector.get_table_names()
+    if "prompts" in table_names:
         prompt_columns = [col["name"] for col in inspector.get_columns("prompts")]
         if "copies" not in prompt_columns:
             with db.engine.connect() as conn:
                 conn.execute(text("ALTER TABLE prompts ADD COLUMN copies INTEGER DEFAULT 0"))
+    if "users" in table_names:
+        user_columns = [col["name"] for col in inspector.get_columns("users")]
+        if "is_verified" not in user_columns:
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0"))
     seed_database()
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true",
+    )

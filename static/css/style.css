@@ -823,6 +823,26 @@ code{
   margin-bottom:8px;letter-spacing:-.02em;
 }
 .auth-header p{color:var(--text2);font-size:.9rem}
+.auth-info-box{
+  background: rgba(255, 79, 106, 0.1);
+  border: 1px solid rgba(255, 79, 106, 0.3);
+  border-radius: var(--r2);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: var(--text2);
+}
+.info-icon{
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.auth-info-box p{
+  margin: 0;
+  color: inherit;
+}
 .auth-form{display:flex;flex-direction:column;gap:20px;position:relative}
 .auth-switch{text-align:center;margin-top:24px;font-size:.875rem;color:var(--text2)}
 .auth-switch a{color:var(--purple)}
@@ -919,6 +939,92 @@ code{
   max-width:1200px;margin:0 auto;
   padding:48px 24px 80px;
 }
+
+/* ── Email Verification Banner ────────────────────────────── */
+.verification-banner{
+  background: linear-gradient(135deg, rgba(255, 79, 106, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border: 1px solid rgba(255, 79, 106, 0.4);
+  border-radius: var(--r2);
+  padding: 20px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.verification-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.verification-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.verification-text {
+  flex: 1;
+}
+
+.verification-text strong {
+  display: block;
+  color: #ff4f6a;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.verification-text p {
+  color: var(--text2);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.btn-verification {
+  background: linear-gradient(135deg, #ff4f6a 0%, #ff6b7a 100%);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 79, 106, 0.3);
+  flex-shrink: 0;
+}
+
+.btn-verification:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 79, 106, 0.5);
+}
+
+@media (max-width: 640px) {
+  .verification-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .verification-text strong {
+    font-size: 0.95rem;
+  }
+  .btn-verification {
+    width: 100%;
+  }
+}
+
 .dash-header{
   display:flex;align-items:center;gap:24px;
   background:var(--bg3);border:1px solid var(--border2);
