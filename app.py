@@ -53,6 +53,7 @@ def send_verification_email(user):
     verify_url = url_for("verify_email", token=token, _external=True)
     try:
         html_content = render_template("email/verify_email.html", username=user.username.title(), verify_url=verify_url)
+        print(f"DEBUG API KEY: {os.environ.get('RESEND_API_KEY', 'NOT FOUND')[:10]}")
         resend.Emails.send({
             "from": "RohithBuilds <onboarding@resend.dev>",
             "to": user.email,
