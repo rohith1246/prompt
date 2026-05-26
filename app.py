@@ -9,6 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from itsdangerous import URLSafeTimedSerializer
 from models import db, User, Prompt, Favorite
 from forms import RegisterForm, LoginForm, PromptForm, CATEGORIES
+import sendgrid
+from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -52,18 +54,25 @@ def send_verification_email(user):
     token = generate_verification_token(user.email)
     verify_url = url_for("verify_email", token=token, _external=True)
     try:
-        html_content = render_template("email/verify_email.html", username=user.username.title(), verify_url=verify_url)
-        print(f"DEBUG API KEY: {os.environ.get('RESEND_API_KEY', 'NOT FOUND')[:10]}")
-        resend.Emails.send({
-            "from": "RohithBuilds <onboarding@resend.dev>",
-            "to": user.email,
-            "subject": "Verify Your Email - RohithBuilds",
-            "html": html_content
-        })
-        print(f"✅ Email sent to {user.email} via Resend")
+        html_content = render_template(
+            "email/verify_email.html",
+            username=user.username.title(),
+            verify_url=verify_url
+        )
+        sg = sendgrid.SendGridAPIClient(
+            api_key=os.environ.get("SENDGRID_API_KEY")
+        )
+        message = Mail(
+            from_email="rohithbuildsofficial@gmail.com",
+            to_emails=user.email,
+            subject="Verify Your Email - RohithBuilds",
+            html_content=html_content
+        )
+        response = sg.send(message)
+        print(f"✅ SendGrid sent: {response.status_code}")
         return True
     except Exception as e:
-        print(f"❌ Resend error: {e}")
+        print(f"❌ SendGrid error: {e}")
         return False
 
 SEED_PROMPTS = [
