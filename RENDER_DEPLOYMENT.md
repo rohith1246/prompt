@@ -107,6 +107,8 @@ from dotenv import load_dotenv
 load_dotenv()
 ```
 
+Also make sure `python-dotenv` is included in `requirements.txt` so Render can install it during deployment.
+
 ## 8. Quick production push checklist
 
 - [x] `.gitignore` contains `.env` and `venv/`
