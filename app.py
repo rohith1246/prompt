@@ -16,7 +16,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-dev-key")
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///prompts.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///prompts.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL", "admin@rohithbuilds.com")
 
