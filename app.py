@@ -10,6 +10,7 @@ from itsdangerous import URLSafeTimedSerializer
 from models import db, User, Prompt, Favorite
 from forms import RegisterForm, LoginForm, PromptForm, CATEGORIES
 from dotenv import load_dotenv
+import threading
 load_dotenv()
 
 # ── App setup ────────────────────────────────────────────────────────────────
@@ -75,10 +76,9 @@ def verify_token(token, expiration=3600):
 
 
 def send_verification_email(user):
-    """Send verification email to user."""
     token = generate_verification_token(user.email)
     verify_url = url_for("verify_email", token=token, _external=True)
-    
+
     msg = Message(
         subject="Verify Your Email - RohithBuilds",
         recipients=[user.email],
@@ -88,14 +88,19 @@ def send_verification_email(user):
             verify_url=verify_url
         )
     )
-    
-    try:
-        mail.send(msg)
-        return True
-    except Exception as e:
-        print(f"❌ Email sending failed: {e}")
-        return False
 
+    def send_async(app, message):
+        with app.app_context():
+            try:
+                mail.send(message)
+                print(f"✅ Verification email sent to {message.recipients}")
+            except Exception as e:
+                print(f"❌ Email failed: {e}")
+
+    thread = threading.Thread(target=send_async, args=(app, msg))
+    thread.daemon = True
+    thread.start()
+    return True  # Always returns immediately
 
 # ── Seed data ─────────────────────────────────────────────────────────────────
 SEED_PROMPTS = [
