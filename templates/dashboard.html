@@ -13,6 +13,7 @@
         <p>Create prompts, save favorites, and more. Check your inbox for the verification link.</p>
       </div>
       <form method="POST" action="{{ url_for('resend_verification') }}" style="margin: 0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn-verification">Resend Email</button>
       </form>
     </div>
