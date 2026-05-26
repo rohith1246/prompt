@@ -88,7 +88,11 @@ def send_verification_email(user):
             verify_url=verify_url
         )
     )
+    print(f"📧 Sending to: {user.email} via {app.config['MAIL_USERNAME']}")
+    mail.send(msg)
+    return True
 
+    
     def send_async(app, message):
         with app.app_context():
             try:
