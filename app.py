@@ -79,18 +79,36 @@ def send_verification_email(user):
     token = generate_verification_token(user.email)
     verify_url = url_for("verify_email", token=token, _external=True)
 
-    msg = Message(
-        subject="Verify Your Email - RohithBuilds",
-        recipients=[user.email],
-        html=render_template(
+    try:
+        html_content = render_template(
             "email/verify_email.html",
             username=user.username.title(),
             verify_url=verify_url
         )
-    )
-    print(f"📧 Sending to: {user.email} via {app.config['MAIL_USERNAME']}")
-    mail.send(msg)
-    return True
+        msg = Message(
+            subject="Verify Your Email - RohithBuilds",
+            recipients=[user.email],
+            html=html_content
+        )
+
+        # Pass app instance AND message — keeps context alive
+        def send_async(flask_app, message):
+            with flask_app.app_context():
+                try:
+                    mail.send(message)
+                    print(f"✅ Email sent to {message.recipients}")
+                except Exception as e:
+                    print(f"❌ Mail error: {e}")
+
+        t = threading.Thread(target=send_async, args=(app, msg))
+        t.daemon = True
+        t.start()
+        return True  # returns instantly, never blocks
+
+    except Exception as e:
+        print(f"❌ Error building email: {e}")
+        return False
+
 
     
     def send_async(app, message):
