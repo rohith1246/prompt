@@ -17,8 +17,13 @@ load_dotenv()
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-dev-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///prompts.db")
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,        # test connection before using
+    "pool_recycle": 300,          # recycle connections every 5 min
+    "connect_args": {"connect_timeout": 10}
+}
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL", "admin@rohithbuilds.com")
+app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL", "rohithbuildsofficial@gmail.com")
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
@@ -59,9 +64,7 @@ def send_verification_email(user):
             username=user.username.title(),
             verify_url=verify_url
         )
-        sg = sendgrid.SendGridAPIClient(
-            api_key=os.environ.get("SENDGRID_API_KEY")
-        )
+        sg = sendgrid.SendGridAPIClient(api_key=os.environ.get("SENDGRID_API_KEY"))
         message = Mail(
             from_email="rohithbuildsofficial@gmail.com",
             to_emails=user.email,
@@ -97,6 +100,7 @@ def seed_database():
     db.session.commit()
     print("✅ Database seeded successfully.")
 
+# ── AUTH ROUTES ───────────────────────────────────────────────────────────────
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
@@ -168,6 +172,7 @@ def logout():
     flash("Logged out. See you soon!", "info")
     return redirect(url_for("index"))
 
+# ── PAGE ROUTES ───────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     category = request.args.get("category", "")
@@ -247,19 +252,6 @@ def delete_prompt(prompt_id):
     flash("Prompt deleted.", "info")
     return redirect(url_for("dashboard"))
 
-@app.route("/admin", endpoint="admin")
-@login_required
-def admin():
-    if not (current_user.is_authenticated and getattr(current_user, "email", None) == app.config["ADMIN_EMAIL"]):
-        flash("Admin access only.", "danger")
-        return redirect(url_for("dashboard"))
-    user_count = User.query.count()
-    prompt_count = Prompt.query.count()
-    total_likes = db.session.query(func.coalesce(func.sum(Prompt.likes), 0)).scalar() or 0
-    total_copies = db.session.query(func.coalesce(func.sum(Prompt.copies), 0)).scalar() or 0
-    top_prompts = Prompt.query.order_by(Prompt.likes.desc(), Prompt.copies.desc()).limit(10).all()
-    return render_template("admin.html", user_count=user_count, prompt_count=prompt_count, total_likes=total_likes, total_copies=total_copies, top_prompts=top_prompts)
-
 @app.route("/favorites")
 @login_required
 def favorites():
@@ -267,6 +259,63 @@ def favorites():
     fav_prompts = Prompt.query.filter(Prompt.id.in_([f.prompt_id for f in fav_records])).all()
     return render_template("favorites.html", prompts=fav_prompts)
 
+# ── ADMIN ROUTES ──────────────────────────────────────────────────────────────
+@app.route("/admin", endpoint="admin")
+@login_required
+def admin():
+    if current_user.email != app.config["ADMIN_EMAIL"]:
+        flash("Admin access only.", "danger")
+        return redirect(url_for("dashboard"))
+    user_count = User.query.count()
+    prompt_count = Prompt.query.count()
+    total_likes = db.session.query(func.coalesce(func.sum(Prompt.likes), 0)).scalar() or 0
+    total_copies = db.session.query(func.coalesce(func.sum(Prompt.copies), 0)).scalar() or 0
+    top_prompts = Prompt.query.order_by(Prompt.likes.desc(), Prompt.copies.desc()).limit(10).all()
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template("admin.html",
+        user_count=user_count, prompt_count=prompt_count,
+        total_likes=total_likes, total_copies=total_copies,
+        top_prompts=top_prompts, users=users, config=app.config)
+
+@app.route("/admin/verify-user/<int:user_id>", methods=["POST"])
+@login_required
+def admin_verify_user(user_id):
+    if current_user.email != app.config["ADMIN_EMAIL"]:
+        flash("Admin access only.", "danger")
+        return redirect(url_for("dashboard"))
+    user = db.session.get(User, user_id)
+    if user:
+        user.is_verified = True
+        db.session.commit()
+        flash(f"✅ {user.username} verified successfully.", "success")
+    return redirect(url_for("admin"))
+
+@app.route("/admin/delete-user/<int:user_id>", methods=["POST"])
+@login_required
+def admin_delete_user(user_id):
+    if current_user.email != app.config["ADMIN_EMAIL"]:
+        flash("Admin access only.", "danger")
+        return redirect(url_for("dashboard"))
+    user = db.session.get(User, user_id)
+    if user and user.email != app.config["ADMIN_EMAIL"]:
+        db.session.delete(user)
+        db.session.commit()
+        flash("User deleted.", "info")
+    return redirect(url_for("admin"))
+
+@app.route("/admin/delete-prompt/<int:prompt_id>", methods=["POST"])
+@login_required
+def admin_delete_prompt(prompt_id):
+    if current_user.email != app.config["ADMIN_EMAIL"]:
+        flash("Admin access only.", "danger")
+        return redirect(url_for("dashboard"))
+    prompt = Prompt.query.get_or_404(prompt_id)
+    db.session.delete(prompt)
+    db.session.commit()
+    flash("Prompt deleted.", "info")
+    return redirect(url_for("admin"))
+
+# ── AJAX API ──────────────────────────────────────────────────────────────────
 @app.route("/api/like/<int:prompt_id>", methods=["POST"])
 @csrf.exempt
 @login_required
@@ -302,6 +351,7 @@ def toggle_favorite(prompt_id):
     db.session.commit()
     return jsonify({"status": "added"})
 
+# ── DB INIT ───────────────────────────────────────────────────────────────────
 with app.app_context():
     db.create_all()
     inspector = inspect(db.engine)

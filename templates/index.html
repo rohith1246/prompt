@@ -67,18 +67,18 @@
   <!-- Floating prompt cards -->
   <div class="hero-floaters" aria-hidden="true">
     <div class="floater f1">
-      <div class="floater-tag">Coding</div>
+      <div class="floater-tag">Vibe Coding</div>
       <div class="floater-text">You are an expert code reviewer. Analyze this code for bugs, security issues...</div>
       <div class="floater-footer"><span>▲ 124</span><span>📋 Copy</span></div>
     </div>
     <div class="floater f2">
-      <div class="floater-tag">Marketing</div>
-      <div class="floater-text">Create a viral Twitter thread about [TOPIC] that hooks readers instantly...</div>
+      <div class="floater-tag">LinkedIn That Doesn't Suck</div>
+      <div class="floater-text">Create a viral post about [TOPIC] that hooks readers instantly...</div>
       <div class="floater-footer"><span>▲ 89</span><span>📋 Copy</span></div>
     </div>
     <div class="floater f3">
-      <div class="floater-tag">Creative</div>
-      <div class="floater-text">You are an award-winning fiction writer. Write a short story with...</div>
+      <div class="floater-tag">Side Hustle Launchpad</div>
+      <div class="floater-text">You are a startup advisor. Evaluate my idea and give me an action plan...</div>
       <div class="floater-footer"><span>▲ 201</span><span>📋 Copy</span></div>
     </div>
   </div>
@@ -95,7 +95,7 @@
         <span class="tb-dot red"></span>
         <span class="tb-dot yellow"></span>
         <span class="tb-dot green"></span>
-        <span class="tb-title">promptvault ~ ai preview</span>
+        <span class="tb-title">rohithbuilds ~ ai preview</span>
       </div>
       <div class="terminal-body">
         <div class="terminal-prompt-line">
@@ -124,7 +124,40 @@
         <a href="{{ url_for('index') }}" class="cpill {% if not active_category %}active{% endif %}">
           <span class="cpill-icon">✦</span> All
         </a>
-        {% set cat_icons = {'Writing':'✍️','Coding':'💻','Marketing':'📣','Business':'💼','Education':'🎓','Creative':'🎨','Research':'🔬','Productivity':'⚡','General':'🌐'} %}
+
+        {% set cat_icons = {
+          'Academic Cheat Codes': '🎓',
+          'Vibe Coding': '💻',
+          'Developer DX & Docs': '📖',
+          'Career Pivot Playbook': '🚀',
+          'Legal Plain English': '⚖️',
+          'Prompt Engineering': '🧠',
+          'Learning Any Skill Fast': '⚡',
+          'Productivity Systems & SOPs': '📋',
+          'Roast Me & Brutal Feedback': '🔥',
+          'Brain Rot & Chaos Content': '🌀',
+          'Rizz & Social Scripts': '💬',
+          "LinkedIn That Doesn't Suck": '💼',
+          'Negotiation & Power Dynamics': '🤝',
+          'Food & Recipe Remixer': '🍳',
+          'Side Hustle Launchpad': '💰',
+          'Startup Founder Toolkit': '🏗️',
+          'Creator Monetization Vault': '💎',
+          'Cold Outreach That Converts': '📧',
+          'Marketing That Hits Different': '📣',
+          'Business Model & Pricing Lab': '📊',
+          'Personal Brand OS': '🌟',
+          'Lore Drops & Fictional Worlds': '🌍',
+          'AI Agent & Automation Builder': '🤖',
+          'Fictional Character Depth Dives': '🎭',
+          'Dark Academia & Aesthetic Writing': '🖋️',
+          'Therapy Speak & Emotional Processing': '💙',
+          'Manifesting & Future Self': '✨',
+          'Gamemaster & Worldbuilding': '🎲',
+          'Gamer Psychology & Meta': '🎮',
+          'Soft Skills & People Fluency': '🤝'
+        } %}
+
         {% for cat in categories %}
           <a href="{{ url_for('index', category=cat, search=search) }}" class="cpill {% if active_category == cat %}active{% endif %}">
             <span class="cpill-icon">{{ cat_icons.get(cat, '✦') }}</span>
@@ -156,7 +189,7 @@
           <div class="pcard-border"></div>
 
           <div class="pcard-top">
-            <span class="pcat pcat-{{ prompt.category|lower }}">{{ prompt.category }}</span>
+            <span class="pcat pcat-{{ prompt.category|lower|replace(' ', '-')|replace('&', '')|replace("'", '') }}">{{ prompt.category }}</span>
             <button
               class="pfav-btn {% if prompt.id in user_favorites %}active{% endif %}"
               onclick="toggleFavorite({{ prompt.id }}, this)"
