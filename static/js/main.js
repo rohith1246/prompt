@@ -365,3 +365,91 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     if (t) { e.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" }); }
   });
 });
+
+/* ── Improve Prompt ───────────────────────── */
+
+async function improvePrompt(event) {
+
+    event.preventDefault();
+
+    const promptInput = document.getElementById("promptInput");
+    const output = document.getElementById("output");
+    const loading = document.getElementById("loading");
+    const resultBox = document.getElementById("resultBox");
+
+    const prompt = promptInput.value.trim();
+
+    if (!prompt) {
+        alert("Please enter a prompt");
+        return;
+    }
+
+    loading.innerHTML = "Improving...";
+    resultBox.style.display = "none";
+
+    try {
+
+        const response = await fetch("/api/improve", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                prompt: prompt
+            })
+        });
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if (data.error) {
+
+            output.innerHTML = data.error;
+
+        } else {
+
+            output.innerText = data.improved_prompt;
+
+        }
+
+        resultBox.style.display = "block";
+
+    } catch (error) {
+
+        console.error(error);
+
+        output.innerHTML = "Something went wrong.";
+
+        resultBox.style.display = "block";
+    }
+
+    loading.innerHTML = "";
+}
+/* ── Copy Improved Prompt ───────────────────────── */
+
+function copyImprovedPrompt() {
+
+    const output = document.getElementById("output");
+
+    const text = output.innerText;
+
+    if (!text) return;
+
+    navigator.clipboard.writeText(text).then(() => {
+
+        const btn = document.querySelector(".copy-btn");
+
+        const original = btn.innerText;
+
+        btn.innerText = "Copied!";
+
+        setTimeout(() => {
+
+            btn.innerText = original;
+
+        }, 2000);
+
+    });
+
+}

@@ -4,23 +4,45 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-   <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNQJZMK6E6"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-QNQJZMK6E6');
-    </script>
-  <title>{% block title %}RohithBuilds{% endblock %}</title>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNQJZMK6E6"></script>
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag(){
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+    gtag('config', 'G-QNQJZMK6E6');
+  </script>
+
+  <title>
+    {% block title %}
+      RohithBuilds
+    {% endblock %}
+  </title>
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+
+  <link rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet"/>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"/>
+
 </head>
+
 <body>
 
-<!-- ═══════════ CANVAS PARTICLE BG ═══════════ -->
+<!-- ═══════════ PARTICLE BG ═══════════ -->
 <canvas id="particleCanvas"></canvas>
 
 <!-- ═══════════ NOISE OVERLAY ═══════════ -->
@@ -28,126 +50,345 @@
 
 <!-- ═══════════ NAVBAR ═══════════ -->
 <nav class="navbar" id="mainNav">
+
   <div class="nav-container">
 
+    <!-- LOGO -->
     <a href="{{ url_for('index') }}" class="nav-logo">
+
       <div class="logo-mark">
         <div class="logo-hex"></div>
         <span class="logo-bolt">⚡</span>
       </div>
-      <span class="logo-text">Rohith<span class="logo-accent">Builds</span></span>
+
+      <span class="logo-text">
+        Rohith<span class="logo-accent">Builds</span>
+      </span>
+
     </a>
 
+    <!-- SEARCH -->
     <div class="nav-center">
-      <form action="{{ url_for('index') }}" method="GET" class="nav-search-form">
+
+      <form action="{{ url_for('index') }}"
+            method="GET"
+            class="nav-search-form">
+
         <div class="search-icon-wrap">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+
+          <svg width="15"
+               height="15"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2">
+
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+
+          </svg>
+
         </div>
-        <input type="text" name="search" value="{{ search if search else '' }}" placeholder="Search the vault…" class="nav-search-input"/>
+
+        <input type="text"
+               name="search"
+               value="{{ search if search else '' }}"
+               placeholder="Search the vault…"
+               class="nav-search-input"/>
+
         <kbd class="search-kbd">⌘K</kbd>
+
       </form>
+
     </div>
 
+    <!-- NAV LINKS -->
     <div class="nav-links">
-      <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+
+      <!-- Explore -->
+      <a href="{{ url_for('index') }}"
+         class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
         <span>Explore</span>
       </a>
+
+      <!-- Improve Prompt -->
+      <a href="{{ url_for('improve_page') }}"
+         class="nav-link {% if request.endpoint == 'improve_page' %}active{% endif %}">
+        <span>Improve AI</span>
+      </a>
+
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('favorites') }}" class="nav-link">
+
+        <!-- Saved -->
+        <a href="{{ url_for('favorites') }}"
+           class="nav-link">
           <span>Saved</span>
         </a>
-        <a href="{{ url_for('create_prompt') }}" class="nav-cta-btn">
+
+        <!-- New Prompt -->
+        <a href="{{ url_for('create_prompt') }}"
+           class="nav-cta-btn">
+
           <span class="btn-shimmer"></span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+
+          <svg width="14"
+               height="14"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2.5">
+
+            <path d="M12 5v14M5 12h14"/>
+
+          </svg>
+
           <span>New Prompt</span>
+
         </a>
+
+        <!-- USER -->
         <div class="nav-user-wrap">
-          <a href="{{ url_for('dashboard') }}" class="nav-user-btn" title="{{ current_user.username }}">
+
+          <a href="{{ url_for('dashboard') }}"
+             class="nav-user-btn"
+             title="{{ current_user.username }}">
+
             <div class="user-ring"></div>
-            <span>{{ current_user.username[0].upper() }}</span>
+
+            <span>
+              {{ current_user.username[0].upper() }}
+            </span>
+
           </a>
+
+          <!-- DROPDOWN -->
           <div class="nav-user-dropdown">
-            <a href="{{ url_for('dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('favorites') }}">Favorites</a>
+
+            <a href="{{ url_for('dashboard') }}">
+              Dashboard
+            </a>
+
+            <a href="{{ url_for('favorites') }}">
+              Favorites
+            </a>
+
+            <a href="{{ url_for('improve_page') }}">
+              Improve AI
+            </a>
+
             {% if is_admin %}
-              <a href="{{ url_for('admin') }}">Admin Panel</a>
+              <a href="{{ url_for('admin') }}">
+                Admin Panel
+              </a>
             {% endif %}
+
             <div class="dropdown-divider"></div>
-            <a href="{{ url_for('logout') }}" class="dropdown-logout">Logout</a>
+
+            <a href="{{ url_for('logout') }}"
+               class="dropdown-logout">
+              Logout
+            </a>
+
           </div>
+
         </div>
+
       {% else %}
-        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
-        <a href="{{ url_for('register') }}" class="nav-cta-btn">
-          <span class="btn-shimmer"></span>
-          <span>Get Started</span>
+
+        <!-- Login -->
+        <a href="{{ url_for('login') }}"
+           class="nav-link">
+          Login
         </a>
+
+        <!-- Signup -->
+        <a href="{{ url_for('register') }}"
+           class="nav-cta-btn">
+
+          <span class="btn-shimmer"></span>
+
+          <span>Get Started</span>
+
+        </a>
+
       {% endif %}
+
     </div>
 
-    <button class="nav-hamburger" id="navToggle">
-      <span></span><span></span><span></span>
+    <!-- MOBILE TOGGLE -->
+    <button class="nav-hamburger"
+            id="navToggle">
+
+      <span></span>
+      <span></span>
+      <span></span>
+
     </button>
+
   </div>
 
-  <div class="nav-mobile-menu" id="mobileMenu">
-    <form action="{{ url_for('index') }}" method="GET" class="mobile-search-form">
-      <input type="text" name="search" placeholder="Search prompts…"/>
+  <!-- MOBILE MENU -->
+  <div class="nav-mobile-menu"
+       id="mobileMenu">
+
+    <form action="{{ url_for('index') }}"
+          method="GET"
+          class="mobile-search-form">
+
+      <input type="text"
+             name="search"
+             placeholder="Search prompts…"/>
+
       <button type="submit">→</button>
+
     </form>
-    <a href="{{ url_for('index') }}">Explore</a>
+
+    <a href="{{ url_for('index') }}">
+      Explore
+    </a>
+
+    <a href="{{ url_for('improve_page') }}">
+      Improve AI
+    </a>
+
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('favorites') }}">Saved Prompts</a>
-      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+
+      <a href="{{ url_for('favorites') }}">
+        Saved Prompts
+      </a>
+
+      <a href="{{ url_for('dashboard') }}">
+        Dashboard
+      </a>
+
       {% if is_admin %}
-        <a href="{{ url_for('admin') }}">Admin Panel</a>
+        <a href="{{ url_for('admin') }}">
+          Admin Panel
+        </a>
       {% endif %}
-      <a href="{{ url_for('create_prompt') }}">+ New Prompt</a>
-      <a href="{{ url_for('logout') }}" style="color:#ff4f6a">Logout</a>
+
+      <a href="{{ url_for('create_prompt') }}">
+        + New Prompt
+      </a>
+
+      <a href="{{ url_for('logout') }}"
+         style="color:#ff4f6a">
+        Logout
+      </a>
+
     {% else %}
-      <a href="{{ url_for('login') }}">Login</a>
-      <a href="{{ url_for('register') }}">Sign Up Free →</a>
+
+      <a href="{{ url_for('login') }}">
+        Login
+      </a>
+
+      <a href="{{ url_for('register') }}">
+        Sign Up Free →
+      </a>
+
     {% endif %}
+
   </div>
+
 </nav>
 
 <!-- ═══════════ FLASH MESSAGES ═══════════ -->
 {% with messages = get_flashed_messages(with_categories=true) %}
+
   {% if messages %}
+
     <div class="flash-container">
+
       {% for category, message in messages %}
+
         <div class="flash flash-{{ category }}">
-          <div class="flash-icon">{% if category == 'success' %}✓{% elif category == 'danger' %}✕{% else %}i{% endif %}</div>
+
+          <div class="flash-icon">
+
+            {% if category == 'success' %}
+              ✓
+            {% elif category == 'danger' %}
+              ✕
+            {% else %}
+              i
+            {% endif %}
+
+          </div>
+
           <span>{{ message }}</span>
-          <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+
+          <button class="flash-close"
+                  onclick="this.parentElement.remove()">
+            ✕
+          </button>
+
         </div>
+
       {% endfor %}
+
     </div>
+
   {% endif %}
+
 {% endwith %}
 
-<!-- ═══════════ MAIN ═══════════ -->
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
 <main class="main-content">
-  {% block content %}{% endblock %}
+
+  {% block content %}
+  {% endblock %}
+
 </main>
 
 <!-- ═══════════ FOOTER ═══════════ -->
 <footer class="footer">
+
   <div class="footer-glow"></div>
+
   <div class="footer-inner">
+
     <div class="footer-brand">
-      <span class="footer-logo">⚡ RohithBuilds</span>
-<p>Built by Rohith · For the AI generation.</p>
+
+      <span class="footer-logo">
+        ⚡ RohithBuilds
+      </span>
+
+      <p>
+        Built by Rohith · For the AI generation.
+      </p>
+
     </div>
+
     <div class="footer-links">
-      <a href="{{ url_for('index') }}">Explore</a>
-      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}">Share Prompt</a>
-      <a href="{{ url_for('login') }}">Login</a>
+
+      <a href="{{ url_for('index') }}">
+        Explore
+      </a>
+
+      <a href="{{ url_for('improve_page') }}">
+        Improve AI
+      </a>
+
+      <a href="{{ url_for('create_prompt') if current_user.is_authenticated else url_for('register') }}">
+        Share Prompt
+      </a>
+
+      <a href="{{ url_for('login') }}">
+        Login
+      </a>
+
     </div>
-    <p class="footer-copy">© 2026 PromptVault · Built for the AI generation</p>
+
+    <p class="footer-copy">
+      © 2026 RohithBuilds · Built for the AI generation
+    </p>
+
   </div>
+
 </footer>
 
+<!-- MAIN JS -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 </html>

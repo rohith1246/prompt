@@ -12,7 +12,10 @@ from forms import RegisterForm, LoginForm, PromptForm, CATEGORIES
 import sendgrid
 from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
+import os
+from gemini_helper import improve_prompt
+
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-dev-key")
@@ -171,7 +174,42 @@ def logout():
     logout_user()
     flash("Logged out. See you soon!", "info")
     return redirect(url_for("index"))
+@app.route("/improve")
+def improve_page():
 
+    return render_template("improve.html")
+
+@app.route("/api/improve", methods=["POST"])
+@csrf.exempt
+def improve_prompt_api():
+
+    try:
+
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "error": "No JSON data received"
+            }), 400
+
+        user_prompt = data.get("prompt")
+
+        if not user_prompt:
+            return jsonify({
+                "error": "Prompt is required"
+            }), 400
+
+        improved = improve_prompt(user_prompt)
+
+        return jsonify({
+            "improved_prompt": improved
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 # ── PAGE ROUTES ───────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
@@ -365,6 +403,7 @@ with app.app_context():
             with db.engine.connect() as conn:
                 conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0"))
     seed_database()
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true")
