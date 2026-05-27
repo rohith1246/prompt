@@ -89,7 +89,7 @@ SEED_PROMPTS = [
 def seed_database():
     if User.query.first():
         return
-    seed_user = User(username="rohithbuilds", email="admin@rohithbuilds.com", password_hash=generate_password_hash("admin123"), is_verified=True)
+    seed_user = User(username="rohithbuilds", email="rohithbuildsofficial@gmail.com", password_hash=generate_password_hash("admin123"), is_verified=True)
     db.session.add(seed_user)
     db.session.flush()
     for p in SEED_PROMPTS:
