@@ -72,7 +72,8 @@
 
       <form action="{{ url_for('index') }}"
             method="GET"
-            class="nav-search-form">
+            class="nav-search-form"
+            data-prompt-search-form>
 
         <div class="search-icon-wrap">
 
@@ -94,7 +95,8 @@
                name="search"
                value="{{ search if search else '' }}"
                placeholder="Search the vault…"
-               class="nav-search-input"/>
+               class="nav-search-input"
+               data-prompt-search-input/>
 
         <kbd class="search-kbd">⌘K</kbd>
 
@@ -233,11 +235,13 @@
 
     <form action="{{ url_for('index') }}"
           method="GET"
-          class="mobile-search-form">
+          class="mobile-search-form"
+          data-prompt-search-form>
 
       <input type="text"
              name="search"
-             placeholder="Search prompts…"/>
+             placeholder="Search prompts…"
+             data-prompt-search-input/>
 
       <button type="submit">→</button>
 
@@ -297,16 +301,18 @@
 
   {% if messages %}
 
-    <div class="flash-container">
+    <div class="flash-container" aria-live="polite" role="status">
 
       {% for category, message in messages %}
 
-        <div class="flash flash-{{ category }}">
+        <div class="flash flash-{{ category }}{% if category == 'verification' %} flash-verification flash-sticky{% endif %}">
 
           <div class="flash-icon">
 
             {% if category == 'success' %}
               ✓
+            {% elif category == 'verification' %}
+              ✉
             {% elif category == 'danger' %}
               ✕
             {% else %}
@@ -318,6 +324,7 @@
           <span>{{ message }}</span>
 
           <button class="flash-close"
+                  aria-label="Dismiss message"
                   onclick="this.parentElement.remove()">
             ✕
           </button>
@@ -389,6 +396,7 @@
 
 <!-- MAIN JS -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/prompt-feed.js') }}"></script>
 
 </body>
 </html>

@@ -1,5 +1,9 @@
 "use strict";
 
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isCompactViewport = window.matchMedia("(max-width: 768px)").matches;
+const performanceMode = prefersReducedMotion || isCompactViewport;
+
 /* ════════════════════════════════════════════════
    PromptVault — Premium Interactions
    ════════════════════════════════════════════════ */
@@ -8,6 +12,10 @@
 (function initParticles() {
   const canvas = document.getElementById("particleCanvas");
   if (!canvas) return;
+  if (performanceMode) {
+    canvas.style.display = "none";
+    return;
+  }
   const ctx = canvas.getContext("2d");
   let W, H, particles = [];
 
@@ -60,9 +68,15 @@
 
 /* ── Navbar scroll shadow ───────────────────────── */
 const mainNav = document.getElementById("mainNav");
+let navScrollRaf = null;
 window.addEventListener("scroll", () => {
-  if (mainNav) mainNav.classList.toggle("scrolled", window.scrollY > 20);
+  if (navScrollRaf) return;
+  navScrollRaf = requestAnimationFrame(() => {
+    if (mainNav) mainNav.classList.toggle("scrolled", window.scrollY > 20);
+    navScrollRaf = null;
+  });
 }, { passive: true });
+if (mainNav) mainNav.classList.toggle("scrolled", window.scrollY > 20);
 
 /* ── Mobile Nav ─────────────────────────────────── */
 const navToggle  = document.getElementById("navToggle");
@@ -149,7 +163,13 @@ function typewriterTick() {
     setTimeout(typewriterTick, 30);
   }
 }
-setTimeout(typewriterTick, 800);
+if (twEl) {
+  if (performanceMode) {
+    twEl.textContent = TW_WORDS[0];
+  } else {
+    setTimeout(typewriterTick, 800);
+  }
+}
 
 /* ── Terminal Showcase ──────────────────────────── */
 const SHOWCASE_PROMPTS = [
@@ -209,10 +229,20 @@ function loadShowcase(index) {
   });
 }
 
-if (termOutput) setTimeout(() => loadShowcase(0), 600);
+if (termOutput) {
+  if (performanceMode) {
+    const firstPrompt = SHOWCASE_PROMPTS[0];
+    if (termCategory) termCategory.textContent = firstPrompt.cat;
+    termOutput.textContent = firstPrompt.text;
+    updateDots(0);
+  } else {
+    setTimeout(() => loadShowcase(0), 600);
+  }
+}
 
 /* ── Flash auto-dismiss ─────────────────────────── */
 document.querySelectorAll(".flash").forEach(el => {
+  if (el.classList.contains("flash-sticky")) return;
   setTimeout(() => {
     el.style.transition = "opacity .4s, transform .4s";
     el.style.opacity = "0";

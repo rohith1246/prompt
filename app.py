@@ -81,6 +81,37 @@ def send_verification_email(user):
         print(f"❌ SendGrid error: {e}")
         return False
 
+def build_prompt_feed_context(category="", search=""):
+    query = Prompt.query
+
+    if category:
+        query = query.filter_by(category=category)
+
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(db.or_(Prompt.title.ilike(search_term), Prompt.content.ilike(search_term)))
+
+    prompts = query.order_by(Prompt.created_at.desc(), Prompt.id.desc()).all()
+
+    user_favorites = set()
+    if current_user.is_authenticated:
+        user_favorites = {favorite.prompt_id for favorite in Favorite.query.filter_by(user_id=current_user.id).all()}
+
+    clear_search_params = {}
+    if category:
+        clear_search_params["category"] = category
+
+    return {
+        "prompts": prompts,
+        "categories": [category_name for category_name, _ in CATEGORIES],
+        "active_category": category,
+        "search": search,
+        "user_favorites": user_favorites,
+        "prompt_count": len(prompts),
+        "total_prompts": Prompt.query.count(),
+        "clear_search_url": url_for("index", **clear_search_params),
+    }
+
 SEED_PROMPTS = [
     {"title": "Ultimate Code Reviewer", "content": "You are an expert senior software engineer conducting a thorough code review. Analyze the following code for:\n1. Bugs and logical errors\n2. Security vulnerabilities\n3. Performance optimizations\n4. Code style and best practices\n5. Missing edge cases\n\nProvide specific, actionable feedback with code examples where applicable.\n\nCode to review:\n[PASTE YOUR CODE HERE]", "category": "Coding"},
     {"title": "Viral Twitter Thread Generator", "content": "You are a viral social media strategist. Create a compelling Twitter thread about [TOPIC] that:\n- Hooks readers in the first tweet\n- Uses short punchy sentences\n- Includes surprising facts or insights\n- Has a strong call to action at the end\n- Is formatted as Tweet 1/, Tweet 2/, etc.\n\nWrite 8-12 tweets. Make it shareable and valuable.", "category": "Marketing"},
@@ -115,7 +146,7 @@ def register():
         try:
             db.session.commit()
             if send_verification_email(user):
-                flash(f"Welcome {user.username.title()}! 🎉 Check {user.email} for your verification link.", "success")
+                flash("Verification email sent. Please check spam/promotions folder.", "verification")
             else:
                 flash("Account created! Email failed — resend from your dashboard.", "warning")
             return redirect(url_for("login"))
@@ -149,7 +180,7 @@ def resend_verification():
         flash("Your email is already verified!", "info")
         return redirect(url_for("dashboard"))
     if send_verification_email(current_user):
-        flash(f"Verification email sent to {current_user.email}", "success")
+        flash("Verification email sent. Please check spam/promotions folder.", "verification")
     else:
         flash("Failed to send email. Please try again.", "danger")
     return redirect(url_for("dashboard"))
@@ -163,7 +194,9 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user)
-            flash(f"Welcome back, {user.username}! 👋", "success")
+            flash(f"Welcome back, {user.username}!", "success")
+            if not user.is_verified:
+                flash("Your account still needs verification. Check spam/promotions folder or resend from your dashboard.", "verification")
             return redirect(request.args.get("next") or url_for("dashboard"))
         flash("Invalid email or password.", "danger")
     return render_template("login.html", form=form)
@@ -213,19 +246,27 @@ def improve_prompt_api():
 # ── PAGE ROUTES ───────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
-    category = request.args.get("category", "")
-    search = request.args.get("search", "")
-    query = Prompt.query
-    if category:
-        query = query.filter_by(category=category)
-    if search:
-        query = query.filter(db.or_(Prompt.title.ilike(f"%{search}%"), Prompt.content.ilike(f"%{search}%")))
-    prompts = query.order_by(Prompt.created_at.desc()).all()
-    categories = [c[0] for c in CATEGORIES]
-    user_favorites = set()
-    if current_user.is_authenticated:
-        user_favorites = {f.prompt_id for f in Favorite.query.filter_by(user_id=current_user.id).all()}
-    return render_template("index.html", prompts=prompts, categories=categories, active_category=category, search=search, user_favorites=user_favorites)
+    feed = build_prompt_feed_context(
+        category=request.args.get("category", "").strip(),
+        search=request.args.get("search", "").strip(),
+    )
+    return render_template("index.html", **feed)
+
+
+@app.route("/api/prompts")
+def api_prompts():
+    feed = build_prompt_feed_context(
+        category=request.args.get("category", "").strip(),
+        search=request.args.get("search", "").strip(),
+    )
+    html = render_template("partials/prompt_results.html", **feed)
+    return jsonify({
+        "html": html,
+        "prompt_count": feed["prompt_count"],
+        "total_prompts": feed["total_prompts"],
+        "active_category": feed["active_category"],
+        "search": feed["search"],
+    })
 
 @app.route("/dashboard")
 @login_required
