@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}{{ prompt.title }} — PromptVault{% endblock %}
+{% block title %}{{ prompt.title }} — RohithBuilds{% endblock %}
 
 {% block content %}
 <div class="container detail-page">
   <div class="detail-main">
     <!-- Breadcrumb -->
     <div class="breadcrumb">
-      <a href="{{ url_for('index') }}">Explore</a>
+      <a href="{{ url_for('home') }}">Home</a>
       <span>›</span>
-      <a href="{{ url_for('index', category=prompt.category) }}">{{ prompt.category }}</a>
+      <a href="{{ url_for('vault', category=prompt.category) }}">{{ prompt.category }}</a>
       <span>›</span>
       <span>{{ prompt.title[:40] }}{% if prompt.title|length > 40 %}…{% endif %}</span>
     </div>
@@ -45,11 +45,7 @@
       </button>
 
       {% if current_user.is_authenticated %}
-        <button
-          class="btn-fav-lg {% if is_favorite %}active{% endif %}"
-          id="favBtn"
-          onclick="toggleFavDetail({{ prompt.id }}, this)"
-        >
+        <button class="btn-fav-lg {% if is_favorite %}active{% endif %}" id="favBtn" onclick="toggleFavDetail({{ prompt.id }}, this)">
           {% if is_favorite %}♥ Saved{% else %}♡ Save{% endif %}
         </button>
       {% else %}
@@ -72,7 +68,7 @@
       <h3>About this prompt</h3>
       <div class="sidebar-info-row">
         <span>Category</span>
-        <a href="{{ url_for('index', category=prompt.category) }}">{{ prompt.category }}</a>
+        <a href="{{ url_for('vault', category=prompt.category) }}">{{ prompt.category }}</a>
       </div>
       <div class="sidebar-info-row">
         <span>Author</span>
@@ -82,24 +78,6 @@
         <span>Published</span>
         <strong>{{ prompt.created_at.strftime('%b %d, %Y') }}</strong>
       </div>
-      <div class="sidebar-info-row">
-        <span>Likes</span>
-        <strong>{{ prompt.likes }}</strong>
-      </div>
-      <div class="sidebar-info-row">
-        <span>Copies</span>
-        <strong>{{ prompt.copies or 0 }}</strong>
-      </div>
-    </div>
-
-    <div class="sidebar-card">
-      <h3>How to use</h3>
-      <ol class="how-to-list">
-        <li>Click <strong>Copy Prompt</strong></li>
-        <li>Paste into ChatGPT, Claude, or Gemini</li>
-        
-        <li>Run and enjoy!</li>
-      </ol>
     </div>
   </aside>
 </div>

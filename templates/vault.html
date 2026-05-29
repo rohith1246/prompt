@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Vault — AI Prompts Library{% endblock %}
+
+{% block content %}
+
+<section class="vault-header">
+  <div class="container">
+    <h1 class="page-title">The Vault</h1>
+    <p class="page-subtitle">Battle-tested AI prompts used by thousands of builders</p>
+  </div>
+</section>
+
+<!-- Search & Filters -->
+<section class="filter-bar">
+  <div class="container">
+    <form action="{{ url_for('vault') }}" method="GET" class="search-form">
+      <input type="text" name="search" value="{{ search }}" placeholder="Search prompts..." class="search-input"/>
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <div class="category-filters">
+      <a href="{{ url_for('vault') }}" class="cat-pill {% if not active_category %}active{% endif %}">All</a>
+      {% for cat in categories %}
+        <a href="{{ url_for('vault', category=cat) }}" 
+           class="cat-pill {% if active_category == cat %}active{% endif %}">
+          {{ cat }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Prompt Grid -->
+<section class="prompt-grid-section container">
+  <div id="promptResults">
+    {% include "partials/prompt_results.html" %}
+  </div>
+</section>
+
+{% endblock %}

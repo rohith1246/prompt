@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Learn — Daily AI Prompt Lessons{% endblock %}
+
+{% block content %}
+
+<section class="learn-header">
+  <div class="container">
+    <h1 class="page-title">Daily Lessons</h1>
+    <p class="page-subtitle">Level up your prompting skills — one day at a time</p>
+  </div>
+</section>
+
+<div class="lessons-container container">
+  <div class="lessons-grid">
+    
+    {% for lesson in lessons %}
+    <div class="lesson-card">
+      <div class="lesson-image">
+        <img src="{{ url_for('static', filename=lesson.image) }}" 
+             alt="Day {{ lesson.day }}" 
+             onerror="this.src='https://via.placeholder.com/600x400/3b82f6/ffffff?text=Day+{{lesson.day}}'">
+      </div>
+      
+      <div class="lesson-content">
+        <div class="lesson-day">DAY {{ lesson.day }}</div>
+        <h3 class="lesson-title">{{ lesson.title }}</h3>
+        <p class="lesson-desc">{{ lesson.desc }}</p>
+        
+        <a href="#" class="lesson-btn">
+          Read Lesson →
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+{% endblock %}

@@ -10,7 +10,7 @@
       <div class="verification-icon">📧</div>
       <div class="verification-text">
         <strong>Verify your email to unlock all features</strong>
-        <p>Create prompts, save favorites, and more. Check your inbox for the verification link.</p>
+        <p>Create prompts, save favorites, and more. Check your inbox — and your spam/promotions folder — for the verification link.</p>
       </div>
       <form method="POST" action="{{ url_for('resend_verification') }}" style="margin: 0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

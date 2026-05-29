@@ -1,0 +1,58 @@
+/* static/css/learn.css */
+
+.lessons-container {
+  padding: 60px 0;
+}
+
+.lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 32px;
+}
+
+.lesson-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  transition: all 0.3s;
+}
+
+.lesson-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+.lesson-image img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.lesson-content {
+  padding: 28px;
+}
+
+.lesson-day {
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.lesson-title {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.lesson-desc {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.lesson-btn {
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+}

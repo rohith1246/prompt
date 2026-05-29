@@ -1,0 +1,59 @@
+/* static/css/vault.css */
+
+.vault-header {
+  padding: 80px 0 40px;
+  text-align: center;
+}
+
+.filter-bar {
+  background: #f8fafc;
+  padding: 20px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.search-form {
+  display: flex;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 14px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px 0 0 12px;
+  font-size: 1rem;
+}
+
+.search-btn {
+  padding: 0 32px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0 12px 12px 0;
+  cursor: pointer;
+}
+
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cat-pill {
+  padding: 8px 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  text-decoration: none;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.cat-pill.active,
+.cat-pill:hover {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}

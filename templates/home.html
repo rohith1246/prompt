@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}RohithBuilds — AI Prompts & Lessons{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Built for Creators & Builders</div>
+    
+    <h1 class="hero-title">
+      Master AI.<br>
+      <span class="gradient-text">Build Faster.</span>
+    </h1>
+    
+    <p class="hero-subtitle">
+      High-quality AI prompts, daily lessons, and tools to level up your prompting game.
+    </p>
+
+    <div class="hero-ctas">
+      <a href="{{ url_for('vault') }}" class="btn-primary large">Explore Vault →</a>
+      <a href="{{ url_for('learn') }}" class="btn-secondary large">Start Learning</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-number">500+</span>
+        <span class="stat-label">Prompts</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">5+</span>
+        <span class="stat-label">Lessons</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">∞</span>
+        <span class="stat-label">Possibilities</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="container">
+    <h2 class="section-title">Everything You Need</h2>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Vault</h3>
+        <p>Curated collection of battle-tested prompts across categories.</p>
+        <a href="{{ url_for('vault') }}" class="feature-link">Browse Vault →</a>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📚</div>
+        <h3>Learn</h3>
+        <p>Daily structured lessons with visuals to improve your skills.</p>
+        <a href="{{ url_for('learn') }}" class="feature-link">Start Learning →</a>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <h3>Improve</h3>
+        <p>AI-powered prompt enhancer. Make any prompt 10x better.</p>
+        <a href="{{ url_for('improve_page') }}" class="feature-link">Try Improver →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
