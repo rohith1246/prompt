@@ -13,7 +13,6 @@ import sendgrid
 from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
 load_dotenv(override=True)
-import os
 from gemini_helper import improve_prompt
 
 
@@ -21,8 +20,8 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "fallback-dev-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///prompts.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,        # test connection before using
-    "pool_recycle": 300,          # recycle connections every 5 min
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
     "connect_args": {"connect_timeout": 10}
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -109,18 +108,15 @@ def build_prompt_feed_context(category="", search=""):
         "user_favorites": user_favorites,
         "prompt_count": len(prompts),
         "total_prompts": Prompt.query.count(),
-        "clear_search_url": url_for("index", **clear_search_params),
+        "clear_search_url": url_for("vault", **clear_search_params),
     }
 
 SEED_PROMPTS = [
-    {"title": "Ultimate Code Reviewer", "content": "You are an expert senior software engineer conducting a thorough code review. Analyze the following code for:\n1. Bugs and logical errors\n2. Security vulnerabilities\n3. Performance optimizations\n4. Code style and best practices\n5. Missing edge cases\n\nProvide specific, actionable feedback with code examples where applicable.\n\nCode to review:\n[PASTE YOUR CODE HERE]", "category": "Coding"},
-    {"title": "Viral Twitter Thread Generator", "content": "You are a viral social media strategist. Create a compelling Twitter thread about [TOPIC] that:\n- Hooks readers in the first tweet\n- Uses short punchy sentences\n- Includes surprising facts or insights\n- Has a strong call to action at the end\n- Is formatted as Tweet 1/, Tweet 2/, etc.\n\nWrite 8-12 tweets. Make it shareable and valuable.", "category": "Marketing"},
-    {"title": "Startup Idea Validator", "content": "Act as a seasoned startup mentor. Evaluate this startup idea: [YOUR IDEA]\n\nProvide:\n✅ Strengths\n❌ Weaknesses\n🎯 Target market size\n💰 Monetization models\n🚀 MVP suggestion\n⚠️ Top 3 risks\n📊 Overall score: X/10", "category": "Business"},
-    {"title": "Essay Writing Assistant", "content": "You are an expert academic writer. Help me write a compelling essay on: [TOPIC]\n\nRequirements:\n- Word count: [SPECIFY]\n- Audience: [SPECIFY]\n- Tone: [formal/casual/persuasive]\n\nStructure:\n1. Attention-grabbing introduction\n2. Clear thesis statement\n3. 3 well-argued body paragraphs\n4. Counterargument addressed\n5. Strong conclusion", "category": "Writing"},
-    {"title": "Personal Tutor - Any Subject", "content": "You are a world-class tutor. Teach me [TOPIC/CONCEPT] as if I am a [BEGINNER/INTERMEDIATE/EXPERT].\n\nApproach:\n- Start with a real-world analogy\n- Break into digestible steps\n- Give 2-3 practical examples\n- Include a quick exercise\n- Answer my top 3 likely questions", "category": "Education"},
-    {"title": "Research Paper Summarizer", "content": "You are an expert research analyst. Summarize this paper:\n[PASTE PAPER HERE]\n\nProvide:\n📌 TL;DR (2 sentences)\n🎯 Main research question\n🔬 Methodology\n📊 Key findings\n💡 Real-world implications\n⚠️ Limitations", "category": "Research"},
-    {"title": "Morning Productivity Planner", "content": "You are a productivity coach. Create my optimal daily schedule.\n\nMy goals: [LIST YOUR GOALS]\nAvailable hours: [HOURS PER DAY]\nEnergy peaks: [MORNING/AFTERNOON/EVENING]\n\nCreate:\n⏰ Hour-by-hour schedule\n🎯 Top 3 priorities (MIT)\n⚡ Energy management tips\n🚫 What to say NO to today", "category": "Productivity"},
-    {"title": "Short Story Generator", "content": "You are an award-winning fiction writer. Write a short story:\n\nGenre: [GENRE]\nSetting: [TIME AND PLACE]\nMain character: [BRIEF DESCRIPTION]\nCore conflict: [THE CENTRAL PROBLEM]\nMood: [TENSE/MYSTERIOUS/HOPEFUL]\n\nRequirements:\n- 600-800 words\n- Strong opening hook\n- Unexpected twist or memorable ending", "category": "Creative"},
+    {"title": "Ultimate Code Reviewer", "content": "You are an expert senior software engineer conducting a thorough code review...", "category": "Coding"},
+    {"title": "Viral Twitter Thread Generator", "content": "You are a viral social media strategist...", "category": "Marketing"},
+    {"title": "Startup Idea Validator", "content": "Act as a seasoned startup mentor...", "category": "Business"},
+    {"title": "Essay Writing Assistant", "content": "You are an expert academic writer...", "category": "Writing"},
+    {"title": "Personal Tutor - Any Subject", "content": "You are a world-class tutor...", "category": "Education"},
 ]
 
 def seed_database():
@@ -134,11 +130,44 @@ def seed_database():
     db.session.commit()
     print("✅ Database seeded successfully.")
 
+# ── NEW MAIN ROUTES ───────────────────────────────────────────────────────────────
+
+@app.route("/")
+def home():
+    """New Clean Landing Page"""
+    return render_template("home.html")
+
+@app.route("/vault")
+def vault():
+    """Prompt Vault / Library"""
+    feed = build_prompt_feed_context(
+        category=request.args.get("category", "").strip(),
+        search=request.args.get("search", "").strip(),
+    )
+    return render_template("vault.html", **feed)
+
+@app.route("/learn")
+def learn():
+    """Daily Lessons Page (Image Cards)"""
+    lessons = [
+        {"day": 1, "title": "Day 1: Introduction to Prompt Engineering", "image": "images/lessons/day1.png", "desc": "Learn the fundamentals of writing great prompts."},
+        {"day": 2, "title": "Day 2: Advanced Techniques", "image": "images/lessons/day2.png", "desc": "Master chain of thought and role prompting."},
+        {"day": 3, "title": "Day 3: Creative Writing Prompts", "image": "images/lessons/day3.png", "desc": "Create compelling stories and content."},
+        {"day": 4, "title": "Day 4: Coding & Development", "image": "images/lessons/day4.png", "desc": "Use AI to boost your programming skills."},
+        {"day": 5, "title": "Day 5: Business & Productivity", "image": "images/lessons/day5.png", "desc": "Apply AI to real business problems."},
+    ]
+    return render_template("learn.html", lessons=lessons)
+
+@app.route("/improve")
+def improve_page():
+    return render_template("improve.html")
+
 # ── AUTH ROUTES ───────────────────────────────────────────────────────────────
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))
     form = RegisterForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data, password_hash=generate_password_hash(form.password.data), is_verified=False)
@@ -188,7 +217,7 @@ def resend_verification():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -206,52 +235,24 @@ def login():
 def logout():
     logout_user()
     flash("Logged out. See you soon!", "info")
-    return redirect(url_for("index"))
-@app.route("/improve")
-def improve_page():
+    return redirect(url_for("home"))
 
-    return render_template("improve.html")
+# ── API & OTHER ROUTES ───────────────────────────────────────────────────────────────
 
 @app.route("/api/improve", methods=["POST"])
 @csrf.exempt
 def improve_prompt_api():
-
     try:
-
         data = request.get_json()
-
         if not data:
-            return jsonify({
-                "error": "No JSON data received"
-            }), 400
-
+            return jsonify({"error": "No JSON data received"}), 400
         user_prompt = data.get("prompt")
-
         if not user_prompt:
-            return jsonify({
-                "error": "Prompt is required"
-            }), 400
-
+            return jsonify({"error": "Prompt is required"}), 400
         improved = improve_prompt(user_prompt)
-
-        return jsonify({
-            "improved_prompt": improved
-        })
-
+        return jsonify({"improved_prompt": improved})
     except Exception as e:
-
-        return jsonify({
-            "error": str(e)
-        }), 500
-# ── PAGE ROUTES ───────────────────────────────────────────────────────────────
-@app.route("/")
-def index():
-    feed = build_prompt_feed_context(
-        category=request.args.get("category", "").strip(),
-        search=request.args.get("search", "").strip(),
-    )
-    return render_template("index.html", **feed)
-
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/prompts")
 def api_prompts():
@@ -305,7 +306,7 @@ def edit_prompt(prompt_id):
     prompt = Prompt.query.get_or_404(prompt_id)
     if prompt.user_id != current_user.id:
         flash("You can only edit your own prompts.", "danger")
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))
     if not current_user.is_verified:
         flash("Please verify your email before editing prompts.", "warning")
         return redirect(url_for("dashboard"))
@@ -325,7 +326,7 @@ def delete_prompt(prompt_id):
     prompt = Prompt.query.get_or_404(prompt_id)
     if prompt.user_id != current_user.id:
         flash("You can only delete your own prompts.", "danger")
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))
     db.session.delete(prompt)
     db.session.commit()
     flash("Prompt deleted.", "info")
@@ -339,6 +340,7 @@ def favorites():
     return render_template("favorites.html", prompts=fav_prompts)
 
 # ── ADMIN ROUTES ──────────────────────────────────────────────────────────────
+
 @app.route("/admin", endpoint="admin")
 @login_required
 def admin():
@@ -395,6 +397,7 @@ def admin_delete_prompt(prompt_id):
     return redirect(url_for("admin"))
 
 # ── AJAX API ──────────────────────────────────────────────────────────────────
+
 @app.route("/api/like/<int:prompt_id>", methods=["POST"])
 @csrf.exempt
 @login_required

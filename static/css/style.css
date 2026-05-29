@@ -39,7 +39,17 @@
   --glow-blue: 0 0 40px rgba(59,130,246,0.2), 0 0 80px rgba(59,130,246,0.08);
   --glow-purple: 0 0 40px rgba(139,92,246,0.2), 0 0 80px rgba(139,92,246,0.08);
 }
-
+.nav-logo-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.nav-logo:hover .nav-logo-img {
+  border-color: rgba(139,92,246,.7);
+  transform: scale(1.05);
+  transition: all .2s;
+}
 /* ── Reset ─────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
